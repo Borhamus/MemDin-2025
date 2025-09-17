@@ -1,7 +1,8 @@
 class Configuracion {
+
     constructor() {
         this.estrategia = "FirstFit";
-        this.tamanoMemoria = 1024; // KB
+        this.tamanoMemoria = 1024; 
         this.procesosJSON = [];
         this.tCarga = 1;
         this.tAsignacion = 1;

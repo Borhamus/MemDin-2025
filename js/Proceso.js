@@ -1,7 +1,6 @@
 class Proceso {
     constructor(id, arrivaltime, duracion, memReq) {
         this.id = id;
-        this.nombre = id; // Usar el ID como nombre si no se proporciona
         this.arrivaltime = arrivaltime;
         this.duracion = duracion;
         this.tiempoRestante = duracion;
@@ -38,7 +37,6 @@ class Proceso {
     toGanttTask() {
         return {
             id: this.id,
-            name: `${this.nombre} (${this.memReq}KB)`,
             start: new Date(2024, 0, 1, 0, this.tiempoInicio || 0),
             end: new Date(2024, 0, 1, 0, (this.tiempoInicio || 0) + this.duracion),
             progress: this.estado === "terminado" ? 100 : 

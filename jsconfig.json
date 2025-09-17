@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
+    "checkJs": false  // ¡Esta es la clave!
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
