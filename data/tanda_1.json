@@ -1,7 +1,6 @@
 [
-{"id": "P1",  "arrivaltime": 5, "duracion": 20, "memReq": 15},
-{"id": "P2",  "arrivaltime": 3, "duracion": 10, "memReq": 10},
-{"id": "P3",  "arrivaltime": 0, "duracion": 5,  "memReq": 5},
-{"id": "P4",  "arrivaltime": 7, "duracion": 15, "memReq": 20},
-{"id": "P5",  "arrivaltime": 9, "duracion": 30, "memReq": 25}
+  {"id": "P1", "arrivaltime": 0, "duracion": 10, "memReq": 20},
+  {"id": "P2", "arrivaltime": 2, "duracion": 8,  "memReq": 15},
+  {"id": "P3", "arrivaltime": 4, "duracion": 6,  "memReq": 25},
+  {"id": "P4", "arrivaltime": 6, "duracion": 12, "memReq": 10}
 ]

@@ -1,70 +1,126 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Simulador de Memoria Dinámica</title>
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/frappe-gantt.css">
-
-<script src="js/estrats/firstfit.js"></script>
-<script src="js/estrats/nextfit.js"></script>
-<script src="js/estrats/bestfit.js"></script>
-<script src="js/estrats/worstfit.js"></script>
-<script src="js/bloquememoria.js"></script>
-<script src="js/memoria.js"></script>
-<script src="js/proceso.js"></script>
-<script src="js/configuracion.js"></script>
-<script src="js/snapshot.js"></script>
-<script src="js/reporte.js"></script>
-<script src="js/simulador.js"></script>
-<script src="js/main.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Administración de Memoria - Particiones Dinámicas</title>
+    <link rel="stylesheet" href="css/frappe-gantt.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<h1>Simulador de Memoria Dinámica</h1>
+    <div class="container">
+        <header>
+            <h1>SIMULADOR DE ADMINISTRACION DE MEMORIA</h1>
+            <p>SIMULACION DE PARTICIONES DINAMICAS CON DIFERENTES ESTRATEGIAS DE ASIGNACION</p>
+        </header>
 
-<div class="contenedor-superior">
-  <!-- CUADRO DE CONFIGURACION -->
-  <div class="configuracion">
-    <h2>Configuración del Simulador</h2>
-    <label>Tamaño de Memoria (KB): <input type="number" id="tamMemoria" value="1024"></label><br>
-    <label>Estrategia de Asignación:
-      <select id="estrategia">
-        <option value="FirstFit">First Fit</option>
-        <option value="NextFit">Next Fit</option>
-        <option value="BestFit">Best Fit</option>
-        <option value="WorstFit">Worst Fit</option>
-      </select>
-    </label><br>
-    <label>Tiempo de Selección: <input type="number" id="tSeleccion" value="1"></label><br>
-    <label>Tiempo de Carga Promedio: <input type="number" id="tCarga" value="1"></label><br>
-    <label>Tiempo de Liberación: <input type="number" id="tLiberacion" value="1"></label><br>
-    <label>Archivo de Tanda:
-      <select id="archivoTanda"></select>
-    </label><br>
-    <button id="btnSimular">Simular</button>
-    <button id="btnDescargar">Descargar Resultados</button>
-  </div>
+        <main>
+            <section class="configuracion-panel">
+                <h2>CONFIGURACION DE LA SIMULACION</h2>
+                
+                <div class="config-grid">
+                    <div class="config-group">
+                        <label for="archivoTanda">TANDA DE TRABAJO:</label>
+                        <select id="archivoTanda" required>
+                            <option value="">SELECCIONE UNA TANDA...</option>
+                        </select>
+                    </div>
 
-  <!-- CUADRO DE GANTT -->
-  <div class="gantt-container">
-    <h2>Diagrama de Gantt</h2>
-    <div id="gantt"></div>
-    <div class="botones-gantt">
-      <button id="btnInicio"><<</button>
-      <button id="btnRetroceder"><</button>
-      <button id="btnAvanzar">></button>
-      <button id="btnFinal">>></button>
+                    <div class="config-group">
+                        <label for="tamMemoria">TAMANO DE MEMORIA (KB):</label>
+                        <input type="number" id="tamMemoria" value="100" min="64" max="8192" required>
+                    </div>
+
+                    <div class="config-group">
+                        <label for="estrategia">ESTRATEGIA DE ASIGNACION:</label>
+                        <select id="estrategia" required>
+                            <option value="FirstFit">FIRST FIT</option>
+                            <option value="NextFit">NEXT FIT</option>
+                            <option value="BestFit">BEST FIT</option>
+                            <option value="WorstFit">WORST FIT</option>
+                        </select>
+                    </div>
+
+                    <div class="config-group">
+                        <label for="tSeleccion">TIEMPO DE SELECCION:</label>
+                        <input type="number" id="tSeleccion" value="1" min="1" max="10">
+                    </div>
+
+                    <div class="config-group">
+                        <label for="tCarga">TIEMPO DE CARGA:</label>
+                        <input type="number" id="tCarga" value="1" min="1" max="10">
+                    </div>
+
+                    <div class="config-group">
+                        <label for="tLiberacion">TIEMPO DE LIBERACION:</label>
+                        <input type="number" id="tLiberacion" value="1" min="1" max="10">
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button id="btnSimular" class="btn btn-primary">
+                        EJECUTAR SIMULACION
+                    </button>
+                </div>
+            </section>
+
+            <section class="resultados-panel">
+                <div class="panel-header">
+                    <h2>RESULTADOS DE LA SIMULACION</h2>
+                    <div class="navegacion-tiempo">
+                        <span>TIEMPO: <strong id="tiempoActual">0 / 0</strong></span>
+                        <div class="btn-group">
+                            <button id="btnInicio" class="btn btn-nav" title="Ir al inicio (Home)" disabled>INICIO</button>
+                            <button id="btnRetroceder" class="btn btn-nav" title="Retroceder (←)" disabled>ANTERIOR</button>
+                            <button id="btnAvanzar" class="btn btn-nav" title="Avanzar (→)" disabled>SIGUIENTE</button>
+                            <button id="btnFinal" class="btn btn-nav" title="Ir al final (End)" disabled>FINAL</button>
+                        </div>
+                        <button id="btnDescargar" class="btn btn-secondary" disabled>
+                            DESCARGAR REPORTE
+                        </button>
+                    </div>
+                </div>
+
+                <div class="resultados-content">
+                    <div class="resultados-texto">
+                        <h3>ESTADO DEL SISTEMA</h3>
+                        <pre id="areaResultados">SELECCIONE UNA TANDA DE TRABAJO Y CONFIGURE LOS PARAMETROS PARA COMENZAR</pre>
+                    </div>
+
+                    <div class="gantt-container">
+                        <h3>DIAGRAMA DE GANTT</h3>
+                        <div id="gantt"></div>
+                        <div class="gantt-help">
+                            <small>NAVEGUE USANDO LAS FLECHAS DEL TECLADO O LOS BOTONES DE CONTROL</small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <p>TRABAJO PRACTICO DE IMPLEMENTACION - ADMINISTRACION DE MEMORIA</p>
+                <p>SISTEMAS OPERATIVOS - PARTICIONES DINAMICAS</p>
+                <p>CREADOR - BORHAMUS FYNOLT</p>
+                
+            </div>
+        </footer>
     </div>
-  </div>
-</div>
 
-<!-- RESULTADOS DE SIMULACION -->
-<div class="resultados">
-  <h2>Resultados de la Simulación</h2>
-  <pre id="areaResultados"></pre>
-</div>
-
-
+    <!-- Scripts -->
+    <script src="lib/frappe-gantt.umd.js"></script>
+    
+    <!-- Clases del simulador en el orden correcto -->
+    <script src="js/BloqueMemoria.js"></script>
+    <script src="js/Proceso.js"></script>
+    <script src="js/Memoria.js"></script>
+    <script src="js/Configuracion.js"></script>
+    <script src="js/Evento.js"></script>
+    <script src="js/Snapshot.js"></script>
+    <script src="js/Reporte.js"></script>
+    <script src="js/AlgoritmoAsignacion.js"></script>
+    <script src="js/Simulador.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>

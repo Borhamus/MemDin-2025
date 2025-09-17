@@ -1,0 +1,7 @@
+[
+  {"id": "P1", "arrivaltime": 0, "duracion": 8,  "memReq": 25},
+  {"id": "P2", "arrivaltime": 0, "duracion": 12, "memReq": 20},
+  {"id": "P3", "arrivaltime": 0, "duracion": 6,  "memReq": 30},
+  {"id": "P4", "arrivaltime": 8, "duracion": 10, "memReq": 40},
+  {"id": "P5", "arrivaltime": 10, "duracion": 5, "memReq": 15}
+]
