@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Simulador de Memoria Dinámica</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/frappe-gantt.css">
+
+<script src="js/estrats/firstfit.js"></script>
+<script src="js/estrats/nextfit.js"></script>
+<script src="js/estrats/bestfit.js"></script>
+<script src="js/estrats/worstfit.js"></script>
+<script src="js/bloquememoria.js"></script>
+<script src="js/memoria.js"></script>
+<script src="js/proceso.js"></script>
+<script src="js/configuracion.js"></script>
+<script src="js/snapshot.js"></script>
+<script src="js/reporte.js"></script>
+<script src="js/simulador.js"></script>
+<script src="js/main.js"></script>
+
+</head>
+<body>
+<h1>Simulador de Memoria Dinámica</h1>
+
+<div class="contenedor-superior">
+  <!-- CUADRO DE CONFIGURACION -->
+  <div class="configuracion">
+    <h2>Configuración del Simulador</h2>
+    <label>Tamaño de Memoria (KB): <input type="number" id="tamMemoria" value="1024"></label><br>
+    <label>Estrategia de Asignación:
+      <select id="estrategia">
+        <option value="FirstFit">First Fit</option>
+        <option value="NextFit">Next Fit</option>
+        <option value="BestFit">Best Fit</option>
+        <option value="WorstFit">Worst Fit</option>
+      </select>
+    </label><br>
+    <label>Tiempo de Selección: <input type="number" id="tSeleccion" value="1"></label><br>
+    <label>Tiempo de Carga Promedio: <input type="number" id="tCarga" value="1"></label><br>
+    <label>Tiempo de Liberación: <input type="number" id="tLiberacion" value="1"></label><br>
+    <label>Archivo de Tanda:
+      <select id="archivoTanda"></select>
+    </label><br>
+    <button id="btnSimular">Simular</button>
+    <button id="btnDescargar">Descargar Resultados</button>
+  </div>
+
+  <!-- CUADRO DE GANTT -->
+  <div class="gantt-container">
+    <h2>Diagrama de Gantt</h2>
+    <div id="gantt"></div>
+    <div class="botones-gantt">
+      <button id="btnInicio"><<</button>
+      <button id="btnRetroceder"><</button>
+      <button id="btnAvanzar">></button>
+      <button id="btnFinal">>></button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTADOS DE SIMULACION -->
+<div class="resultados">
+  <h2>Resultados de la Simulación</h2>
+  <pre id="areaResultados"></pre>
+</div>
+
+
+</body>
+</html>

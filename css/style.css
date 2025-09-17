@@ -1,0 +1,29 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+.contenedor-superior {
+  display: flex;
+  gap: 20px;
+}
+
+.configuracion, .gantt-container {
+  border: 1px solid #333;
+  padding: 15px;
+  border-radius: 8px;
+  width: 45%;
+}
+
+.resultados {
+  margin-top: 20px;
+  border: 1px solid #333;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.botones-gantt {
+  margin-top: 10px;
+  display: flex;
+  gap: 5px;
+}

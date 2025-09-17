@@ -1,0 +1,103 @@
+classDiagram
+direction TB
+
+class Simulador {
+    - configuracion : Configuracion
+    - memoria : Memoria
+    - listaProcesos : List<Proceso>
+    - algoritmo : AlgoritmoAsignacion
+    - tiempoActual : int
+    - eventos : List<Evento>
+    - snapshots : List<Snapshot>
+    + inicializar(config : Configuracion)
+    + correrSimulacion()
+    + avanzarUnidadTiempo()
+    + retrocederUnidadTiempo()
+    + generarReporte() : Reporte
+}
+
+class Configuracion {
+    - estrategia : String
+    - tamañoMemoria : int
+    - procesosJSON : String
+    - tCarga : int
+    - tAsignacion : int
+    - tLiberacion : int
+    + validar() : boolean
+}
+
+class Memoria {
+    - tamaño : int
+    - bloques : List<BloqueMemoria>
+    + asignar(proceso : Proceso, tiempoActual : int) : boolean
+    + liberar(proceso : Proceso, tiempoActual : int)
+    + compactar()
+    + snapshot() : List<BloqueMemoria>
+}
+
+class BloqueMemoria {
+    - inicio : int
+    - tamaño : int
+    - estado : String  # "libre"/"ocupado"
+    - procesoAsignado : Proceso
+    + estaLibre() : boolean
+    + dividir(tamañoNuevo : int) : BloqueMemoria
+    + fusionarSiguiente(siguiente : BloqueMemoria)
+}
+
+class Proceso {
+    - id : String
+    - nombre : String
+    - tamaño : int
+    - tiempoEjecucion : int
+    - tiempoRestante : int
+    - estado : String  # "listo"/"ejecutando"/"terminado"
+    - tiempoInicio : int
+    - tiempoFinal : int
+    + disminuirTiempo(unidades : int)
+    + estaTerminado() : boolean
+}
+
+class Evento {
+    - tiempo : int
+    - descripcion : String
+    - snapshotMemoria : List<BloqueMemoria>
+    - snapshotProcesos : List<Proceso>
+}
+
+class Snapshot {
+    - tiempo : int
+    - memoria : List<BloqueMemoria>
+    - procesos : List<Proceso>
+    - texto : String
+}
+
+class AlgoritmoAsignacion {
+    <<abstract>>
+    + asignar(memoria : Memoria, proceso : Proceso, tiempoActual : int) : boolean
+}
+
+class FirstFit 
+class NextFit 
+class BestFit 
+class WorstFit 
+
+class Reporte {
+    - texto : String
+    + agregarLinea(linea : String)
+    + exportarTXT() : String
+}
+
+Simulador *-- Configuracion
+Simulador *-- Memoria
+Simulador *-- Proceso
+Simulador *-- Evento
+Simulador *-- AlgoritmoAsignacion
+Simulador *-- Reporte
+Simulador *-- Snapshot
+
+Memoria *-- BloqueMemoria
+AlgoritmoAsignacion <|-- FirstFit
+AlgoritmoAsignacion <|-- NextFit
+AlgoritmoAsignacion <|-- BestFit
+AlgoritmoAsignacion <|-- WorstFit
