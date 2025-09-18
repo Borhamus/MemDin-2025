@@ -28,20 +28,29 @@ class Configuracion {
         
         // Validar estructura de cada proceso
         this.procesosJSON.forEach((proceso, index) => {
-            if (!proceso.id || !proceso.nombre) {
-                throw new Error(`Proceso ${index}: debe tener id y nombre`);
+            // Validar ID (debe existir y ser string)
+            if (typeof proceso.id !== 'string' || proceso.id.trim() === '') {
+                throw new Error(`Proceso ${index}: debe tener un id (string) no vacío`);
             }
+            
+            // Validar arrivaltime
             if (typeof proceso.arrivaltime !== 'number' || proceso.arrivaltime < 0) {
-                throw new Error(`Proceso ${proceso.nombre}: tiempo de llegada inválido`);
+                throw new Error(`Proceso ${proceso.id}: tiempo de llegada inválido`);
             }
+            
+            // Validar duracion
             if (typeof proceso.duracion !== 'number' || proceso.duracion <= 0) {
-                throw new Error(`Proceso ${proceso.nombre}: duración debe ser mayor a 0`);
+                throw new Error(`Proceso ${proceso.id}: duración debe ser mayor a 0`);
             }
+            
+            // Validar memReq
             if (typeof proceso.memReq !== 'number' || proceso.memReq <= 0) {
-                throw new Error(`Proceso ${proceso.nombre}: memoria requerida debe ser mayor a 0`);
+                throw new Error(`Proceso ${proceso.id}: memoria requerida debe ser mayor a 0`);
             }
+            
+            // Validar que no exceda la memoria disponible
             if (proceso.memReq > this.tamanoMemoria) {
-                throw new Error(`Proceso ${proceso.nombre}: requiere más memoria de la disponible`);
+                throw new Error(`Proceso ${proceso.id}: requiere más memoria de la disponible`);
             }
         });
         

@@ -11,12 +11,21 @@ class Proceso {
         this.tiempoRetorno = null;
     }
 
+    iniciar(tiempo) {
+        this.tiempoInicio = tiempo;
+        this.estado = "ejecutando";
+    }
+
+    finalizar(tiempo) {
+        this.tiempoFinal = tiempo;
+        this.estado = "terminado";
+    }
+
     disminuirTiempo(unidades = 1) {
         if(this.tiempoRestante > 0) {
             this.tiempoRestante -= unidades;
             if(this.tiempoRestante <= 0) {
                 this.tiempoRestante = 0;
-                this.estado = "terminado";
             }
         }
     }
