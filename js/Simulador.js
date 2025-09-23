@@ -9,10 +9,10 @@ class Simulador {
         this.memoria = null;
         this.listaProcesos = null;
         this.registros = null;
-        this.tiempoGlobal = 0;
+        this.tiempoGlobal = -1;
         this.estaEjecutando = false;
         this.snapshots = [];
-        this.maxTiempoGlobal = 1000; // Límite para evitar bucles infinitos
+        this.maxTiempoGlobal = 1000;
     }
 
     inicializar(configuracion) {
@@ -21,7 +21,7 @@ class Simulador {
         this.listaProcesos = new ListaDeProcesos();
         this.listaProcesos.cargarProcesos(configuracion.getTanda());
         this.registros = new Registros();
-        this.tiempoGlobal = 0;
+        this.tiempoGlobal = -1;
         this.snapshots = [];
         this.estaEjecutando = false;
         
@@ -66,9 +66,11 @@ class Simulador {
             this.asignarNuevosProcesos();
         }
         
+        // Tomar snapshot del estado actual
+        this.tomarSnapshot();
+        
         // Avanzar tiempo global después de todas las operaciones
         this.tiempoGlobal++;
-        this.tomarSnapshot();
     }
 
     procesarLiberacion() {

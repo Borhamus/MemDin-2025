@@ -6,74 +6,59 @@ INDICADORES DE LA SIMULACIÓN
 
 TIEMPO DE RETORNO POR PROCESO:
 -----------------------------
-Proceso P1: 16 unidades de tiempo
+Proceso P1: 5 unidades de tiempo
 Proceso P2: 15 unidades de tiempo
-Proceso P3: 14 unidades de tiempo
-Proceso P4: 21 unidades de tiempo
+Proceso P3: 4 unidades de tiempo
 
 INDICADORES DE LA TANDA:
 ------------------------
-Tiempo de Retorno de la Tanda: 21 unidades de tiempo
-Tiempo Medio de Retorno: 16.50 unidades de tiempo
-Índice de Fragmentación Externa: 100.00%
+Tiempo de Retorno de la Tanda: 26 unidades de tiempo
+Tiempo Medio de Retorno: 8.00 unidades de tiempo
+Índice de Fragmentación Externa: 1.0000
 
 EVENTOS REGISTRADOS:
 --------------------
 Tiempo 0: INICIO_SIMULACION
-  Detalles: {"tamanoMemoria":1024,"estrategia":"FirstFit","tiempos":{"seleccion":1,"carga":2,"liberacion":3}}
+  Detalles: {"tamanoMemoria":130,"estrategia":"FirstFit","tiempos":{"seleccion":3,"carga":2,"liberacion":1}}
 Tiempo 0: ASIGNACION
-  Detalles: {"procesoId":"P1","bloque":{"inicio":0,"tamano":20}}
+  Detalles: {"procesoId":"P1","bloque":{"inicio":0,"tamano":30}}
 Tiempo 0: CAMBIO_ESTADO
   Detalles: {"procesoId":"P1","estadoAnterior":"EnEspera","estadoNuevo":"EnSeleccion"}
-Tiempo 1: CAMBIO_ESTADO
+Tiempo 3: CAMBIO_ESTADO
   Detalles: {"procesoId":"P1","estadoAnterior":"EnSeleccion","estadoNuevo":"EnCarga"}
-Tiempo 3: CAMBIO_ESTADO
+Tiempo 5: CAMBIO_ESTADO
   Detalles: {"procesoId":"P1","estadoAnterior":"EnCarga","estadoNuevo":"EnMemoria"}
-Tiempo 3: ASIGNACION
-  Detalles: {"procesoId":"P2","bloque":{"inicio":20,"tamano":15}}
-Tiempo 3: CAMBIO_ESTADO
+Tiempo 5: ASIGNACION
+  Detalles: {"procesoId":"P2","bloque":{"inicio":30,"tamano":20}}
+Tiempo 5: CAMBIO_ESTADO
   Detalles: {"procesoId":"P2","estadoAnterior":"EnEspera","estadoNuevo":"EnSeleccion"}
-Tiempo 4: CAMBIO_ESTADO
+Tiempo 8: CAMBIO_ESTADO
   Detalles: {"procesoId":"P2","estadoAnterior":"EnSeleccion","estadoNuevo":"EnCarga"}
-Tiempo 6: CAMBIO_ESTADO
-  Detalles: {"procesoId":"P2","estadoAnterior":"EnCarga","estadoNuevo":"EnMemoria"}
-Tiempo 6: ASIGNACION
-  Detalles: {"procesoId":"P3","bloque":{"inicio":35,"tamano":25}}
-Tiempo 6: CAMBIO_ESTADO
-  Detalles: {"procesoId":"P3","estadoAnterior":"EnEspera","estadoNuevo":"EnSeleccion"}
-Tiempo 7: CAMBIO_ESTADO
-  Detalles: {"procesoId":"P3","estadoAnterior":"EnSeleccion","estadoNuevo":"EnCarga"}
-Tiempo 9: CAMBIO_ESTADO
-  Detalles: {"procesoId":"P3","estadoAnterior":"EnCarga","estadoNuevo":"EnMemoria"}
-Tiempo 9: ASIGNACION
-  Detalles: {"procesoId":"P4","bloque":{"inicio":60,"tamano":10}}
-Tiempo 9: CAMBIO_ESTADO
-  Detalles: {"procesoId":"P4","estadoAnterior":"EnEspera","estadoNuevo":"EnSeleccion"}
 Tiempo 10: CAMBIO_ESTADO
-  Detalles: {"procesoId":"P4","estadoAnterior":"EnSeleccion","estadoNuevo":"EnCarga"}
-Tiempo 12: CAMBIO_ESTADO
-  Detalles: {"procesoId":"P4","estadoAnterior":"EnCarga","estadoNuevo":"EnMemoria"}
-Tiempo 13: CAMBIO_ESTADO
   Detalles: {"procesoId":"P1","estadoAnterior":"EnMemoria","estadoNuevo":"EnLiberacion"}
-Tiempo 14: CAMBIO_ESTADO
-  Detalles: {"procesoId":"P2","estadoAnterior":"EnMemoria","estadoNuevo":"EnLiberacion"}
-Tiempo 15: CAMBIO_ESTADO
-  Detalles: {"procesoId":"P3","estadoAnterior":"EnMemoria","estadoNuevo":"EnLiberacion"}
-Tiempo 16: LIBERACION
+Tiempo 10: CAMBIO_ESTADO
+  Detalles: {"procesoId":"P2","estadoAnterior":"EnCarga","estadoNuevo":"EnMemoria"}
+Tiempo 10: ASIGNACION
+  Detalles: {"procesoId":"P3","bloque":{"inicio":50,"tamano":20}}
+Tiempo 10: CAMBIO_ESTADO
+  Detalles: {"procesoId":"P3","estadoAnterior":"EnEspera","estadoNuevo":"EnSeleccion"}
+Tiempo 11: LIBERACION
   Detalles: {"procesoId":"P1","bloque":null}
-Tiempo 16: CAMBIO_ESTADO
+Tiempo 11: CAMBIO_ESTADO
   Detalles: {"procesoId":"P1","estadoAnterior":"EnLiberacion","estadoNuevo":"Finalizado"}
-Tiempo 17: LIBERACION
-  Detalles: {"procesoId":"P2","bloque":null}
-Tiempo 17: CAMBIO_ESTADO
-  Detalles: {"procesoId":"P2","estadoAnterior":"EnLiberacion","estadoNuevo":"Finalizado"}
-Tiempo 18: LIBERACION
+Tiempo 13: CAMBIO_ESTADO
+  Detalles: {"procesoId":"P3","estadoAnterior":"EnSeleccion","estadoNuevo":"EnCarga"}
+Tiempo 15: CAMBIO_ESTADO
+  Detalles: {"procesoId":"P3","estadoAnterior":"EnCarga","estadoNuevo":"EnMemoria"}
+Tiempo 19: CAMBIO_ESTADO
+  Detalles: {"procesoId":"P3","estadoAnterior":"EnMemoria","estadoNuevo":"EnLiberacion"}
+Tiempo 20: LIBERACION
   Detalles: {"procesoId":"P3","bloque":null}
-Tiempo 18: CAMBIO_ESTADO
+Tiempo 20: CAMBIO_ESTADO
   Detalles: {"procesoId":"P3","estadoAnterior":"EnLiberacion","estadoNuevo":"Finalizado"}
-Tiempo 24: CAMBIO_ESTADO
-  Detalles: {"procesoId":"P4","estadoAnterior":"EnMemoria","estadoNuevo":"EnLiberacion"}
-Tiempo 27: LIBERACION
-  Detalles: {"procesoId":"P4","bloque":null}
-Tiempo 27: CAMBIO_ESTADO
-  Detalles: {"procesoId":"P4","estadoAnterior":"EnLiberacion","estadoNuevo":"Finalizado"}
+Tiempo 25: CAMBIO_ESTADO
+  Detalles: {"procesoId":"P2","estadoAnterior":"EnMemoria","estadoNuevo":"EnLiberacion"}
+Tiempo 26: LIBERACION
+  Detalles: {"procesoId":"P2","bloque":null}
+Tiempo 26: CAMBIO_ESTADO
+  Detalles: {"procesoId":"P2","estadoAnterior":"EnLiberacion","estadoNuevo":"Finalizado"}

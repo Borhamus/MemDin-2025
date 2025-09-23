@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function mostrarIndicadores() {
         if (!simulador) return;
         
-        const reporte = new Reporte(simulador.getRegistros(), simulador.getListaProcesos(), simulador.getMemoria());
+        const reporte = new Reporte(simulador.getRegistros(), simulador.getListaProcesos(), simulador.getMemoria(), simulador);
         const indicadores = reporte.getIndicadores();
         
         let textoIndicadores = "\n\nINDICADORES DE LA SIMULACIÓN\n";
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
         textoIndicadores += "------------------------\n";
         textoIndicadores += `Tiempo de Retorno de la Tanda: ${indicadores.tiempoRetornoTanda} unidades de tiempo\n`;
         textoIndicadores += `Tiempo Medio de Retorno: ${indicadores.tiempoMedioRetorno.toFixed(2)} unidades de tiempo\n`;
-        textoIndicadores += `Índice de Fragmentación Externa: ${(indicadores.fragmentacionExterna * 100).toFixed(2)}%\n`;
+        textoIndicadores += `Índice de Fragmentación Externa: ${indicadores.fragmentacionExterna.toFixed(4)}\n`;
         
         // Agregar los indicadores al área de resultados
         areaResultados.textContent += textoIndicadores;
@@ -227,6 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         areaResultados.textContent = texto;
+        // Mostrar el índice del snapshot actual
         tiempoActualSpan.textContent = `${indice} / ${simulador.getSnapshots().length - 1}`;
     }
     
@@ -259,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!simulador) return;
         
         try {
-            const reporte = new Reporte(simulador.getRegistros(), simulador.getListaProcesos(), simulador.getMemoria());
+            const reporte = new Reporte(simulador.getRegistros(), simulador.getListaProcesos(), simulador.getMemoria(), simulador);
             const contenido = reporte.generarReporte();
             
             const blob = new Blob([contenido], { type: 'text/plain' });
