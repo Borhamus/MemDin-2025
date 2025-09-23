@@ -128,7 +128,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 actualizarNavegacion();
                 mostrarSnapshot(snapshotActual);
                 
-                generarGantt();
+                // Generar visualización de memoria después de completar la simulación
+                generarVisualizacionMemoria();
                 
                 // Mostrar indicadores al final
                 mostrarIndicadores();
@@ -243,24 +244,95 @@ document.addEventListener('DOMContentLoaded', function() {
         btnFinal.disabled = snapshotActual === totalSnapshots - 1;
     }
     
-    function generarGantt() {
-        if (!simulador) return;
+    function generarVisualizacionMemoria() {
+        if (!simulador) {
+            console.warn("No hay simulador disponible para generar visualización");
+            return;
+        }
         
-        ganttContainer.innerHTML = '';
+        console.log("Generando visualización de memoria...");
         
         try {
-            graficaGantt = new GraficaGantt(simulador.getRegistros(), simulador.getListaProcesos());
-            graficaGantt.inicializarGantt(ganttContainer);
+            // Destruir instancia anterior si existe
+            if (visualizadorMemoria) {
+                visualizadorMemoria.destruir();
+            }
+            
+            // Crear nueva instancia
+            visualizadorMemoria = new VisualizadorMemoria('gantt');
+            
+            // Inicializar
+            const exito = visualizadorMemoria.inicializar(simulador);
+            
+            if (exito) {
+                console.log("Visualización de memoria generada exitosamente");
+            } else {
+                console.warn("No se pudo generar la visualización de memoria");
+            }
+            
         } catch (error) {
-            console.error("Error al generar el gráfico de Gantt:", error);
-            ganttContainer.innerHTML = `<p>Error al generar el gráfico de Gantt: ${error.message}</p>`;
+            console.error("Error al generar visualización de memoria:", error);
+            ganttContainer.innerHTML = `
+                <div class="gantt-error">
+                    <p>Error al generar la visualización de memoria</p>
+                    <p>Detalles: ${error.message}</p>
+                </div>
+            `;
         }
     }
     
-    function descargarReporte() {
+    // Eliminar función agregarControlesGantt() ya que no se necesita
+    
+    async function obtenerSiguienteNumeroSimulacion() {
+        try {
+            // Intentar obtener la lista de archivos existentes
+            const response = await fetch('sim/');
+            if (response.ok) {
+                const html = await response.text();
+                // Buscar archivos Simulacion_X.txt en el HTML
+                const matches = html.match(/Simulacion_(\d+)\.txt/g);
+                if (matches && matches.length > 0) {
+                    // Extraer números y encontrar el máximo
+                    const numeros = matches.map(match => {
+                        const num = match.match(/Simulacion_(\d+)\.txt/)[1];
+                        return parseInt(num);
+                    });
+                    return Math.max(...numeros) + 1;
+                }
+            }
+        } catch (error) {
+            console.log("No se pudo verificar archivos existentes, usando número 1");
+        }
+        return 1;
+    }
+    
+    async function descargarReporte() {
         if (!simulador) return;
         
         try {
+            const reporte = new Reporte(simulador.getRegistros(), simulador.getListaProcesos(), simulador.getMemoria(), simulador);
+            const contenido = reporte.generarReporte();
+            
+            const numeroSimulacion = await obtenerSiguienteNumeroSimulacion();
+            const nombreArchivo = `Simulacion_${numeroSimulacion}.txt`;
+            
+            const blob = new Blob([contenido], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nombreArchivo;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            console.log(`Reporte descargado como: ${nombreArchivo}`);
+        } catch (error) {
+            console.error("Error al descargar el reporte:", error);
+            // Fallback: usar timestamp si falla la numeración automática
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            const nombreFallback = `Simulacion_${timestamp}.txt`;
+            
             const reporte = new Reporte(simulador.getRegistros(), simulador.getListaProcesos(), simulador.getMemoria(), simulador);
             const contenido = reporte.generarReporte();
             
@@ -268,17 +340,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `simulacion_${new Date().toISOString().slice(0, 10)}.txt`;
+            a.download = nombreFallback;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error("Error al descargar el reporte:", error);
-            areaResultados.textContent = `ERROR: No se pudo descargar el reporte. ${error.message}`;
         }
     }
     
+    // Event Listeners
     btnSimular.addEventListener('click', ejecutarSimulacion);
     btnDescargar.addEventListener('click', descargarReporte);
     
@@ -297,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     btnAvanzar.addEventListener('click', () => {
-        if (snapshotActual < simulador.getSnapshots().length - 1) {
+        if (simulador && snapshotActual < simulador.getSnapshots().length - 1) {
             snapshotActual++;
             mostrarSnapshot(snapshotActual);
             actualizarNavegacion();
@@ -305,10 +375,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     btnFinal.addEventListener('click', () => {
-        snapshotActual = simulador.getSnapshots().length - 1;
-        mostrarSnapshot(snapshotActual);
-        actualizarNavegacion();
+        if (simulador) {
+            snapshotActual = simulador.getSnapshots().length - 1;
+            mostrarSnapshot(snapshotActual);
+            actualizarNavegacion();
+        }
     });
     
+    // Inicializar la aplicación
     cargarTandas();
 });

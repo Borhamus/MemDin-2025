@@ -539,3 +539,240 @@ footer {
     font-size: 0.8em;
     animation: glow-pulse 1s linear infinite;
 }
+
+/* ==========================================
+   ESTILOS ADICIONALES PARA GANTT - Matrix Theme
+   ========================================== */
+
+/* Controles del Gantt */
+.gantt-controls {
+    margin-bottom: 15px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid #00ff00;
+    position: relative;
+}
+
+.gantt-controls::before {
+    content: '> GANTT_CONTROLS';
+    position: absolute;
+    top: -8px;
+    left: 10px;
+    background: #000000;
+    padding: 0 8px;
+    color: #00ff00;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.gantt-controls-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.gantt-controls label {
+    font-weight: 600;
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.gantt-view-selector {
+    padding: 8px 12px;
+    border: 1px solid #00ff00;
+    background: rgba(0, 0, 0, 0.9);
+    color: #00ff00;
+    font-size: 14px;
+    font-family: 'Courier New', monospace;
+    transition: all 0.3s ease;
+}
+
+.gantt-view-selector:focus {
+    outline: none;
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+}
+
+.gantt-view-selector option {
+    background: #000000;
+    color: #00ff00;
+}
+
+/* Estados del Gantt */
+.gantt-loading,
+.gantt-no-data,
+.gantt-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    text-align: center;
+}
+
+.gantt-loading {
+    position: relative;
+}
+
+.gantt-loading::after {
+    content: '...';
+    animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+}
+
+.gantt-error {
+    border-color: #ff0000;
+    color: #ff0000;
+}
+
+.gantt-error p:first-child {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+.gantt-error p:last-child {
+    color: #cc0000;
+    font-size: 0.9em;
+    margin-top: 10px;
+}
+
+/* Personalización del contenedor Gantt */
+#gantt .gantt-container {
+    background: rgba(0, 0, 0, 0.95);
+    border: 1px solid #00ff00;
+    color: #00ff00;
+}
+
+/* Personalización de las barras del Gantt por estado */
+#gantt .gantt .bar-wrapper .estado-libre {
+    fill: #003300;
+    stroke: #00ff00;
+    stroke-width: 1;
+}
+
+#gantt .gantt .bar-wrapper .estado-seleccion {
+    fill: #330033;
+    stroke: #ff00ff;
+    stroke-width: 1;
+}
+
+#gantt .gantt .bar-wrapper .estado-carga {
+    fill: #333300;
+    stroke: #ffff00;
+    stroke-width: 1;
+}
+
+#gantt .gantt .bar-wrapper .estado-memoria {
+    fill: #003300;
+    stroke: #00ff00;
+    stroke-width: 2;
+}
+
+#gantt .gantt .bar-wrapper .estado-liberacion {
+    fill: #330000;
+    stroke: #ff0000;
+    stroke-width: 1;
+}
+
+#gantt .gantt .bar-wrapper .estado-ocupado {
+    fill: #001133;
+    stroke: #0066ff;
+    stroke-width: 1;
+}
+
+/* Popup personalizado */
+.gantt-popup {
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid #00ff00;
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    max-width: 300px;
+}
+
+.popup-title {
+    color: #00ff00;
+    font-weight: bold;
+    font-size: 1em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #00ff00;
+    padding-bottom: 5px;
+}
+
+.popup-content {
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.popup-content p {
+    margin: 5px 0;
+}
+
+.popup-content strong {
+    color: #00cc00;
+}
+
+/* Personalización de headers del Gantt */
+#gantt .gantt-container .grid-header {
+    background: rgba(0, 0, 0, 0.9);
+    border-bottom: 1px solid #00ff00;
+}
+
+#gantt .gantt-container .upper-text,
+#gantt .gantt-container .lower-text {
+    fill: #00ff00;
+    font-family: 'Courier New', monospace;
+}
+
+#gantt .gantt-container .current-upper {
+    background: rgba(0, 0, 0, 0.9);
+    color: #00ff00;
+}
+
+/* Grid personalizado */
+#gantt .gantt .grid-row {
+    fill: rgba(0, 0, 0, 0.8);
+}
+
+#gantt .gantt .tick {
+    stroke: rgba(0, 255, 0, 0.2);
+}
+
+#gantt .gantt .tick.thick {
+    stroke: rgba(0, 255, 0, 0.4);
+}
+
+/* Labels de las barras */
+#gantt .gantt .bar-label {
+    fill: #00ff00;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+/* Responsive para Gantt */
+@media (max-width: 768px) {
+    .gantt-controls-content {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .gantt-view-selector {
+        width: 100%;
+    }
+    
+    #gantt {
+        overflow-x: auto;
+        min-width: 600px;
+    }
+}

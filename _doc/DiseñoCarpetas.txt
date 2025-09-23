@@ -6,13 +6,13 @@ MemDin-2025/
  │   ├── BloqueMemoria.js
  │   ├── Configuracion.js
  │   ├── Estrategias.js
- │   ├── GraficaGantt.js
  │   ├── ListaDeProcesos.js
  │   ├── main.js
  │   ├── Memoria.js
  │   ├── Proceso.js
  │   ├── Registros.js
- │   └── Simulador.js
+ │   ├── Simulador.js
+ │   └── VisualizadorMemoria.js
  │
  ├── sim/                   <- Aqui van las simulacciones finalizadas.
  │   ├── Simulacion_1.txt
