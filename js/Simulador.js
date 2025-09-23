@@ -13,6 +13,10 @@ class Simulador {
         this.estaEjecutando = false;
         this.snapshots = [];
         this.maxTiempoGlobal = 1000;
+        
+        // Variables globales para los cálculos requeridos
+        this.tiempoDeRetornoDeLaTanda = 0;
+        this.espacioLibreXtiempo = 0;
     }
 
     inicializar(configuracion) {
@@ -25,6 +29,10 @@ class Simulador {
         this.snapshots = [];
         this.estaEjecutando = false;
         
+        // Reiniciar variables globales
+        this.tiempoDeRetornoDeLaTanda = 0;
+        this.espacioLibreXtiempo = 0;
+        
         this.registros.registrarEvento(0, 'INICIO_SIMULACION', {
             tamanoMemoria: configuracion.getTamanoMemoria(),
             estrategia: configuracion.getEstrategia(),
@@ -34,6 +42,14 @@ class Simulador {
                 liberacion: configuracion.getTiempoLiberacion()
             }
         });
+        
+        // Intentar asignar el primer proceso en tiempo 0
+        this.asignarNuevosProcesos();
+        
+        // Calcular espacio libre inicial DESPUÉS de la primera asignación
+        if (this.debeCalcularEspacioLibre()) {
+            this.calcularEspacioLibre();
+        }
         
         this.tomarSnapshot();
     }
@@ -54,6 +70,9 @@ class Simulador {
     }
 
     paso() {
+        // Avanzar tiempo global al inicio
+        this.tiempoGlobal++;
+        
         // Procesar estados en orden inverso: Liberacion -> Memoria -> Carga -> Seleccion
         this.procesarLiberacion();
         this.procesarMemoria();
@@ -66,11 +85,44 @@ class Simulador {
             this.asignarNuevosProcesos();
         }
         
+        // Calcular espacio libre DESPUÉS de procesar todos los cambios
+        if (this.debeCalcularEspacioLibre()) {
+            this.calcularEspacioLibre();
+        }
+        
         // Tomar snapshot del estado actual
         this.tomarSnapshot();
+    }
+
+    debeCalcularEspacioLibre() {
+        // Continuar calculando mientras haya procesos que aún no han completado su transición a EnMemoria
+        // Verificar si hay procesos en EnEspera que aún no han llegado
+        const hayProcesosEnEspera = this.listaProcesos.obtenerProcesosEnEspera(this.tiempoGlobal).length > 0;
         
-        // Avanzar tiempo global después de todas las operaciones
-        this.tiempoGlobal++;
+        // Verificar si hay procesos en EnSeleccion o EnCarga
+        const hayProcesosEnSeleccion = this.listaProcesos.hayProcesosEnEstado('EnSeleccion');
+        const hayProcesosEnCarga = this.listaProcesos.hayProcesosEnEstado('EnCarga');
+        
+        const resultado = hayProcesosEnEspera || hayProcesosEnSeleccion || hayProcesosEnCarga;
+        
+        // Debug detallado
+        console.log(`Tiempo ${this.tiempoGlobal}: EnEspera=${hayProcesosEnEspera}, EnSeleccion=${hayProcesosEnSeleccion}, EnCarga=${hayProcesosEnCarga}, Debe calcular=${resultado}`);
+        
+        return resultado;
+    }
+
+    calcularEspacioLibre() {
+        // Solo contar bloques que están realmente libres (no asignados a ningún proceso)
+        const bloquesLibres = this.memoria.bloques.filter(b => b.libre);
+        const espacioLibreActual = bloquesLibres.reduce((sum, bloque) => sum + bloque.tamano, 0);
+        this.espacioLibreXtiempo += espacioLibreActual;
+        
+        // Debug: ver qué se está sumando y el estado de todos los procesos
+        const estadosProcesos = this.listaProcesos.getTodos().map(p => `${p.id}:${p.estado}`).join(', ');
+        console.log(`Tiempo ${this.tiempoGlobal}: Espacio libre = ${espacioLibreActual}KB, Total acumulado = ${this.espacioLibreXtiempo}KB`);
+        console.log(`Estados: ${estadosProcesos}`);
+        console.log(`Bloques: ${this.memoria.bloques.map(b => `${b.inicio}-${b.inicio+b.tamano-1}:${b.libre?'L':'O'}`).join(', ')}`);
+        console.log('---');
     }
 
     procesarLiberacion() {
@@ -99,6 +151,9 @@ class Simulador {
         let procesosEnMemoria = this.listaProcesos.obtenerProcesosPorEstado('EnMemoria');
         for (let proceso of procesosEnMemoria) {
             if (proceso.decrementarTiempo()) {
+                // Actualizar el tiempo de retorno de la tanda cuando un proceso termina su ejecución en memoria
+                this.tiempoDeRetornoDeLaTanda = Math.max(this.tiempoDeRetornoDeLaTanda, this.tiempoGlobal);
+                
                 proceso.iniciarLiberacion(this.configuracion.getTiempoLiberacion(), this.tiempoGlobal);
                 this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
                     procesoId: proceso.id,
@@ -250,5 +305,14 @@ class Simulador {
 
     getMemoria() {
         return this.memoria;
+    }
+
+    // Métodos para acceder a las variables globales
+    getTiempoDeRetornoDeLaTanda() {
+        return this.tiempoDeRetornoDeLaTanda;
+    }
+
+    getEspacioLibreXtiempo() {
+        return this.espacioLibreXtiempo;
     }
 }

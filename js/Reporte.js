@@ -10,18 +10,16 @@ class Reporte {
         let reporte = "REPORTE DE SIMULACIÓN\n";
         reporte += "=====================\n\n";
         
-        // Calcular indicadores
+        // Calcular indicadores usando las nuevas variables globales
         const procesos = this.listaProcesos.getTodos();
         
         // Tiempo de retorno de cada proceso = duración original
         const tiemposRetorno = procesos.map(p => p.duracionOriginal);
-        const tiempoRetornoTanda = Math.max(...procesos.map(p => p.tiempoFin)); // Tiempo real del último proceso
+        const tiempoRetornoTanda = this.simulador.getTiempoDeRetornoDeLaTanda(); // Usar la nueva variable
         const tiempoMedioRetorno = tiemposRetorno.reduce((a, b) => a + b, 0) / procesos.length;
         
-        // Calcular fragmentación externa: espacio libre actual / tamaño total
-        const bloquesLibres = this.memoria.bloques.filter(b => b.libre);
-        const espacioLibre = bloquesLibres.reduce((sum, bloque) => sum + bloque.tamano, 0);
-        const fragmentacionExterna = espacioLibre / this.memoria.tamanoTotal;
+        // Calcular fragmentación externa usando la nueva variable global
+        const fragmentacionExterna = this.simulador.getEspacioLibreXtiempo() / this.memoria.tamanoTotal;
         
         reporte += "INDICADORES DE LA SIMULACIÓN\n";
         reporte += "=============================\n\n";
@@ -36,7 +34,7 @@ class Reporte {
         reporte += "------------------------\n";
         reporte += `Tiempo de Retorno de la Tanda: ${tiempoRetornoTanda} unidades de tiempo\n`;
         reporte += `Tiempo Medio de Retorno: ${tiempoMedioRetorno.toFixed(2)} unidades de tiempo\n`;
-        reporte += `Índice de Fragmentación Externa: ${fragmentacionExterna.toFixed(4)}\n`;
+        reporte += `Índice de Fragmentación Externa: ${fragmentacionExterna.toFixed(2)}\n`;
         
         reporte += "\nEVENTOS REGISTRADOS:\n";
         reporte += "--------------------\n";
@@ -51,12 +49,11 @@ class Reporte {
     getIndicadores() {
         const procesos = this.listaProcesos.getTodos();
         const tiemposRetorno = procesos.map(p => p.duracionOriginal);
-        const tiempoRetornoTanda = Math.max(...procesos.map(p => p.tiempoFin));
+        const tiempoRetornoTanda = this.simulador.getTiempoDeRetornoDeLaTanda(); // Usar la nueva variable
         const tiempoMedioRetorno = tiemposRetorno.reduce((a, b) => a + b, 0) / procesos.length;
         
-        const bloquesLibres = this.memoria.bloques.filter(b => b.libre);
-        const espacioLibre = bloquesLibres.reduce((sum, bloque) => sum + bloque.tamano, 0);
-        const fragmentacionExterna = espacioLibre / this.memoria.tamanoTotal;
+        // Calcular fragmentación externa usando la nueva variable global
+        const fragmentacionExterna = this.simulador.getEspacioLibreXtiempo() / this.memoria.tamanoTotal;
         
         return {
             tiemposRetornoPorProceso: procesos.map(p => ({
@@ -65,7 +62,7 @@ class Reporte {
             })),
             tiempoRetornoTanda: tiempoRetornoTanda,
             tiempoMedioRetorno: tiempoMedioRetorno,
-            fragmentacionExterna: fragmentacionExterna
+            fragmentacionExterna: parseFloat(fragmentacionExterna.toFixed(2))
         };
     }
 }
