@@ -5,7 +5,7 @@ class VisualizadorMemoria {
         this.ctx = null;
         this.simulador = null;
         this.snapshots = [];
-        
+
         // Configuración visual
         this.config = {
             margenIzquierdo: 60,
@@ -14,11 +14,6 @@ class VisualizadorMemoria {
             margenDerecho: 20,
             anchoColumna: 40,
             colores: {
-                libre: '#003300',
-                EnSeleccion: '#660066',
-                EnCarga: '#666600',
-                EnMemoria: '#006600',
-                EnLiberacion: '#660000',
                 borde: '#00ff00',
                 texto: '#00ff00',
                 fondo: '#000000'
@@ -29,7 +24,7 @@ class VisualizadorMemoria {
     inicializar(simulador) {
         this.simulador = simulador;
         this.snapshots = simulador.getSnapshots();
-        
+
         if (!this.snapshots || this.snapshots.length === 0) {
             this.mostrarError("No hay datos de simulación");
             return false;
@@ -48,11 +43,11 @@ class VisualizadorMemoria {
         contenedor.innerHTML = '';
 
         // Calcular dimensiones
-        const anchoCanvas = this.config.margenIzquierdo + 
-                           (this.snapshots.length * this.config.anchoColumna) + 
+        const anchoCanvas = this.config.margenIzquierdo +
+                           (this.snapshots.length * this.config.anchoColumna) +
                            this.config.margenDerecho;
-        const altoCanvas = this.config.margenSuperior + 
-                          this.obtenerTamanoMemoria() + 
+        const altoCanvas = this.config.margenSuperior +
+                          this.obtenerTamanoMemoria() +
                           this.config.margenInferior;
 
         // Crear canvas
@@ -61,7 +56,7 @@ class VisualizadorMemoria {
         this.canvas.height = altoCanvas;
         this.canvas.style.border = '1px solid #00ff00';
         this.canvas.style.backgroundColor = this.config.colores.fondo;
-        
+
         contenedor.appendChild(this.canvas);
         this.ctx = this.canvas.getContext('2d');
 
@@ -73,6 +68,41 @@ class VisualizadorMemoria {
     obtenerTamanoMemoria() {
         if (!this.snapshots[0] || !this.snapshots[0].memoria) return 400;
         return this.snapshots[0].memoria.reduce((total, bloque) => total + bloque.tamano, 0);
+    }
+
+    // === NUEVO: generador de patrones ===
+    crearPatron(tipo, color) {
+        const patternCanvas = document.createElement('canvas');
+        patternCanvas.width = 8;
+        patternCanvas.height = 8;
+        const pctx = patternCanvas.getContext('2d');
+
+        pctx.strokeStyle = color;
+        pctx.fillStyle = color;
+        pctx.lineWidth = 1;
+
+        if (tipo === 'puntos') {
+            pctx.beginPath();
+            pctx.arc(2, 2, 1, 0, 2 * Math.PI);
+            pctx.fill();
+        } else if (tipo === 'rayas-diag') {
+            pctx.beginPath();
+            pctx.moveTo(0, 8);
+            pctx.lineTo(8, 0);
+            pctx.stroke();
+        } else if (tipo === 'rayas-horiz') {
+            pctx.beginPath();
+            pctx.moveTo(0, 4);
+            pctx.lineTo(8, 4);
+            pctx.stroke();
+        } else if (tipo === 'rayas-vert') {
+            pctx.beginPath();
+            pctx.moveTo(4, 0);
+            pctx.lineTo(4, 8);
+            pctx.stroke();
+        }
+
+        return this.ctx.createPattern(patternCanvas, 'repeat');
     }
 
     dibujar() {
@@ -103,7 +133,7 @@ class VisualizadorMemoria {
         // Etiquetas del eje Y (cada 50KB)
         for (let y = 0; y <= tamanoMemoria; y += 50) {
             const posY = this.config.margenSuperior + tamanoMemoria - y;
-            
+
             this.ctx.beginPath();
             this.ctx.moveTo(this.config.margenIzquierdo - 5, posY);
             this.ctx.lineTo(this.config.margenIzquierdo + 5, posY);
@@ -115,7 +145,7 @@ class VisualizadorMemoria {
         // Eje X (tiempo)
         this.ctx.beginPath();
         this.ctx.moveTo(this.config.margenIzquierdo, this.config.margenSuperior + tamanoMemoria);
-        this.ctx.lineTo(this.config.margenIzquierdo + (this.snapshots.length * this.config.anchoColumna), 
+        this.ctx.lineTo(this.config.margenIzquierdo + (this.snapshots.length * this.config.anchoColumna),
                        this.config.margenSuperior + tamanoMemoria);
         this.ctx.stroke();
 
@@ -123,13 +153,13 @@ class VisualizadorMemoria {
         this.snapshots.forEach((snapshot, index) => {
             const posX = this.config.margenIzquierdo + (index * this.config.anchoColumna) + (this.config.anchoColumna / 2);
             const posY = this.config.margenSuperior + tamanoMemoria + 20;
-            
+
             this.ctx.fillText(`T${snapshot.tiempo}`, posX - 10, posY);
         });
 
         // Título
         this.ctx.font = '16px Courier New';
-        this.ctx.fillText('ESTADO DE LA MEMORIA EN EL TIEMPO', 
+        this.ctx.fillText('ESTADO DE LA MEMORIA EN EL TIEMPO',
                          this.canvas.width / 2 - 150, 25);
     }
 
@@ -142,35 +172,46 @@ class VisualizadorMemoria {
             const posXBase = this.config.margenIzquierdo + (tiempoIndex * this.config.anchoColumna);
 
             snapshot.memoria.forEach((bloque) => {
-                // Calcular posición Y (invertida porque canvas crece hacia abajo)
                 const posYInicio = this.config.margenSuperior + tamanoMemoria - bloque.inicio - bloque.tamano;
                 const altura = bloque.tamano;
 
-                // Determinar color según estado
-                let color;
+                // Determinar estilo según estado
+                let fillStyle;
                 if (bloque.libre) {
-                    color = this.config.colores.libre;
+                    fillStyle = this.crearPatron('puntos', '#00ff00');
                 } else {
-                    color = this.config.colores[bloque.proceso.estado] || '#333333';
+                    switch (bloque.proceso.estado) {
+                        case 'EnSeleccion':
+                            fillStyle = this.crearPatron('rayas-diag', '#00ff00');
+                            break;
+                        case 'EnCarga':
+                            fillStyle = this.crearPatron('rayas-horiz', '#00ff00');
+                            break;
+                        case 'EnMemoria':
+                            fillStyle = '#004400'; // sólido
+                            break;
+                        case 'EnLiberacion':
+                            fillStyle = this.crearPatron('rayas-vert', '#00ff00');
+                            break;
+                        default:
+                            fillStyle = '#006600';
+                    }
                 }
 
                 // Dibujar bloque
-                this.ctx.fillStyle = color;
+                this.ctx.fillStyle = fillStyle;
                 this.ctx.fillRect(posXBase + 1, posYInicio, this.config.anchoColumna - 2, altura);
 
-                // Borde del bloque
                 this.ctx.strokeStyle = this.config.colores.borde;
                 this.ctx.strokeRect(posXBase + 1, posYInicio, this.config.anchoColumna - 2, altura);
 
-                // Etiqueta del proceso (si hay espacio)
                 if (altura >= 15 && !bloque.libre) {
                     this.ctx.fillStyle = this.config.colores.texto;
                     this.ctx.font = '10px Courier New';
                     const procesoId = bloque.proceso.id;
                     const textoX = posXBase + 3;
                     const textoY = posYInicio + altura/2 + 3;
-                    
-                    // Rotar texto si es muy largo
+
                     if (procesoId.length <= 4) {
                         this.ctx.fillText(procesoId, textoX, textoY);
                     } else {
@@ -182,7 +223,6 @@ class VisualizadorMemoria {
                     }
                 }
 
-                // Mostrar tamaño si hay espacio
                 if (altura >= 25) {
                     this.ctx.fillStyle = this.config.colores.texto;
                     this.ctx.font = '8px Courier New';
@@ -204,23 +244,21 @@ class VisualizadorMemoria {
         this.ctx.fillText('LEYENDA:', leyendaX, leyendaY);
 
         const estados = [
-            { nombre: 'Libre', color: this.config.colores.libre },
-            { nombre: 'En Selección', color: this.config.colores.EnSeleccion },
-            { nombre: 'En Carga', color: this.config.colores.EnCarga },
-            { nombre: 'En Memoria', color: this.config.colores.EnMemoria },
-            { nombre: 'En Liberación', color: this.config.colores.EnLiberacion }
+            { nombre: 'Libre', estilo: this.crearPatron('puntos', '#00ff00') },
+            { nombre: 'En Selección', estilo: this.crearPatron('rayas-diag', '#00ff00') },
+            { nombre: 'En Carga', estilo: this.crearPatron('rayas-horiz', '#00ff00') },
+            { nombre: 'En Memoria', estilo: '#004400' },
+            { nombre: 'En Liberación', estilo: this.crearPatron('rayas-vert', '#00ff00') }
         ];
 
         estados.forEach((estado, index) => {
             const y = leyendaY + 20 + (index * 20);
-            
-            // Cuadrado de color
-            this.ctx.fillStyle = estado.color;
+
+            this.ctx.fillStyle = estado.estilo;
             this.ctx.fillRect(leyendaX, y - 10, 15, 15);
             this.ctx.strokeStyle = this.config.colores.borde;
             this.ctx.strokeRect(leyendaX, y - 10, 15, 15);
 
-            // Texto
             this.ctx.fillStyle = this.config.colores.texto;
             this.ctx.fillText(estado.nombre, leyendaX + 20, y);
         });
@@ -231,7 +269,6 @@ class VisualizadorMemoria {
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
 
-        // Determinar si está sobre un bloque
         const info = this.obtenerInfoEnPosicion(x, y);
         if (info) {
             this.canvas.style.cursor = 'pointer';
@@ -254,35 +291,32 @@ class VisualizadorMemoria {
     }
 
     obtenerInfoEnPosicion(x, y) {
-        // Determinar tiempo
         const tiempoX = x - this.config.margenIzquierdo;
         const tiempoIndex = Math.floor(tiempoX / this.config.anchoColumna);
-        
+
         if (tiempoIndex < 0 || tiempoIndex >= this.snapshots.length) return null;
 
         const snapshot = this.snapshots[tiempoIndex];
         const tamanoMemoria = this.obtenerTamanoMemoria();
-        
-        // Determinar posición en memoria
+
         const memoriaY = y - this.config.margenSuperior;
         const posicionMemoria = tamanoMemoria - memoriaY;
 
-        // Buscar bloque en esa posición
         for (let bloque of snapshot.memoria) {
-            if (posicionMemoria >= bloque.inicio && 
+            if (posicionMemoria >= bloque.inicio &&
                 posicionMemoria < bloque.inicio + bloque.tamano) {
-                
+
                 let info = `Tiempo: ${snapshot.tiempo}\n`;
                 info += `Posición: ${bloque.inicio} - ${bloque.inicio + bloque.tamano - 1}\n`;
                 info += `Tamaño: ${bloque.tamano}KB\n`;
-                
+
                 if (bloque.libre) {
                     info += 'Estado: LIBRE';
                 } else {
                     info += `Proceso: ${bloque.proceso.id}\n`;
                     info += `Estado: ${bloque.proceso.estado}`;
                 }
-                
+
                 return info;
             }
         }

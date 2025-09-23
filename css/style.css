@@ -544,6 +544,14 @@ footer {
    ESTILOS ADICIONALES PARA GANTT - Matrix Theme
    ========================================== */
 
+#gantt {
+    width: 100%;            /* ocupa todo el ancho disponible */
+    height: 500px;          /* ventana fija de alto visible */
+    overflow: scroll;       /* SIEMPRE muestra scrollbars */
+    border: 1px solid #00ff00;
+    background: black;
+}
+
 /* Controles del Gantt */
 .gantt-controls {
     margin-bottom: 15px;

@@ -17,8 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnFinal = document.getElementById('btnFinal');
     
     let simulador = null;
-    let graficaGantt = null;
+    let visualizadorMemoria = null;
     let snapshotActual = 0;
+    
     
     // Lista de tandas disponibles
     const tandasDisponibles = [
