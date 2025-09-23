@@ -18,7 +18,6 @@ MemDin-2025/
  │   ├── Simulacion_1.txt
  │   └── Simulacion_2.txt
  ├── css/
- │   ├── frappe-gantt.css
  │   └── style.css
  │
  ├── data/
@@ -28,7 +27,5 @@ MemDin-2025/
  │   ├── tanda_4.json <- Tanda creada por mi.
  │   └── tanda_5.json <- Tanda creada por mi.
  │
- ├── lib/
- │   └── frappe-gantt.umd.js
  │
  └── index.html
