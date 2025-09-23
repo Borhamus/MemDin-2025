@@ -1,185 +1,252 @@
 class Simulador {
-    constructor(configuracion) {
+    constructor() {
+        if (Simulador.instance) {
+            return Simulador.instance;
+        }
+        Simulador.instance = this;
+        
+        this.configuracion = null;
+        this.memoria = null;
+        this.listaProcesos = null;
+        this.registros = null;
+        this.tiempoGlobal = 0;
+        this.estaEjecutando = false;
+        this.snapshots = [];
+        this.maxTiempoGlobal = 1000; // Límite para evitar bucles infinitos
+    }
+
+    inicializar(configuracion) {
         this.configuracion = configuracion;
-        this.memoria = new Memoria(configuracion.tamanoMemoria);
-        this.listaProcesos = [];
-        this.algoritmo = null;
-        this.tiempoActual = 0;
-        this.eventos = [];
+        this.memoria = new Memoria(configuracion.getTamanoMemoria());
+        this.listaProcesos = new ListaDeProcesos();
+        this.listaProcesos.cargarProcesos(configuracion.getTanda());
+        this.registros = new Registros();
+        this.tiempoGlobal = 0;
         this.snapshots = [];
-        this.reporte = new Reporte();
-        this.colaEspera = [];
+        this.estaEjecutando = false;
+        
+        this.registros.registrarEvento(0, 'INICIO_SIMULACION', {
+            tamanoMemoria: configuracion.getTamanoMemoria(),
+            estrategia: configuracion.getEstrategia(),
+            tiempos: {
+                seleccion: configuracion.getTiempoSeleccion(),
+                carga: configuracion.getTiempoCarga(),
+                liberacion: configuracion.getTiempoLiberacion()
+            }
+        });
+        
+        this.tomarSnapshot();
     }
 
-    inicializar(procesosJSON) {
-        // Limpiar estado anterior
-        this.tiempoActual = 0;
-        this.eventos = [];
-        this.snapshots = [];
-        this.reporte = new Reporte();
-        this.colaEspera = [];
+    ejecutar() {
+        this.estaEjecutando = true;
         
-        // Crear procesos
-        this.listaProcesos = procesosJSON.map(p => 
-            new Proceso(p.id, p.arrivaltime, p.duracion, p.memReq)
-        );
-
-        // Configurar algoritmo
-        switch(this.configuracion.estrategia) {
-            case "FirstFit": this.algoritmo = new FirstFit(); break;
-            case "NextFit": this.algoritmo = new NextFit(); break;
-            case "BestFit": this.algoritmo = new BestFit(); break;
-            case "WorstFit": this.algoritmo = new WorstFit(); break;
-            default: throw new Error("Estrategia no válida");
+        while (this.estaEjecutando && this.hayProcesosActivos() && this.tiempoGlobal < this.maxTiempoGlobal) {
+            this.paso();
         }
-
-        // Ordenar procesos por tiempo de llegada
-        this.listaProcesos.sort((a, b) => a.arrivaltime - b.arrivaltime);
         
-        // Crear snapshot inicial
-        this.crearSnapshot("Simulación iniciada");
+        if (this.tiempoGlobal >= this.maxTiempoGlobal) {
+            console.warn("Se alcanzó el máximo tiempo global. Posible bucle infinito.");
+        }
         
-        this.reporte.agregarLinea(`=== SIMULACIÓN DE ADMINISTRACIÓN DE MEMORIA ===`);
-        this.reporte.agregarLinea(`Estrategia: ${this.configuracion.estrategia}`);
-        this.reporte.agregarLinea(`Tamaño de memoria: ${this.configuracion.tamanoMemoria}KB`);
-        this.reporte.agregarLinea(`Número de procesos: ${this.listaProcesos.length}`);
-        this.reporte.agregarLinea("=====================================\n");
+        this.registros.registrarEvento(this.tiempoGlobal, 'FIN_SIMULACION', {});
+        this.estaEjecutando = false;
     }
 
-    correrSimulacion() {
-        while(!this.simulacionCompleta()) {
-            this.avanzarUnidadTiempo();
+    paso() {
+        // Procesar estados en orden inverso: Liberacion -> Memoria -> Carga -> Seleccion
+        this.procesarLiberacion();
+        this.procesarMemoria();
+        this.procesarCarga();
+        this.procesarSeleccion();
+        
+        // Intentar asignar nuevos procesos solo si no hay procesos en Seleccion o Carga
+        if (!this.listaProcesos.hayProcesosEnEstado('EnSeleccion') && 
+            !this.listaProcesos.hayProcesosEnEstado('EnCarga')) {
+            this.asignarNuevosProcesos();
         }
-        this.generarReporteCompleto();
+        
+        // Avanzar tiempo global después de todas las operaciones
+        this.tiempoGlobal++;
+        this.tomarSnapshot();
     }
 
-    avanzarUnidadTiempo() {
-        this.tiempoActual++;
-        let huboCambios = false;
-        
-        // 1. Verificar llegada de nuevos procesos
-        const procesosLlegando = this.listaProcesos.filter(p => 
-            p.arrivaltime === this.tiempoActual && p.estado === "listo"
-        );
-        
-        if(procesosLlegando.length > 0) {
-            procesosLlegando.forEach(p => this.colaEspera.push(p));
-            this.eventos.push(new Evento(
-                this.tiempoActual, 
-                `Llegaron ${procesosLlegando.length} proceso(s): ${procesosLlegando.map(p => p.nombre).join(', ')}`,
-                this.memoria.snapshot(),
-                [...this.listaProcesos]
-            ));
-            huboCambios = true;
-        }
-
-        // 2. Intentar asignar procesos en cola de espera
-        let i = 0;
-        while(i < this.colaEspera.length) {
-            const proceso = this.colaEspera[i];
-            if(this.algoritmo.asignar(this.memoria, proceso, this.tiempoActual)) {
-                this.colaEspera.splice(i, 1);
-                this.eventos.push(new Evento(
-                    this.tiempoActual,
-                    `Proceso ${proceso.nombre} asignado a memoria (${proceso.memReq}KB)`,
-                    this.memoria.snapshot(),
-                    [...this.listaProcesos]
-                ));
-                huboCambios = true;
-            } else {
-                i++;
+    procesarLiberacion() {
+        let procesosEnLiberacion = this.listaProcesos.obtenerProcesosPorEstado('EnLiberacion');
+        for (let proceso of procesosEnLiberacion) {
+            if (proceso.decrementarTiempo()) {
+                this.memoria.liberarMemoria(proceso);
+                proceso.finalizar(this.tiempoGlobal);
+                this.registros.registrarEvento(this.tiempoGlobal, 'LIBERACION', {
+                    procesoId: proceso.id,
+                    bloque: proceso.bloqueAsignado ? {
+                        inicio: proceso.bloqueAsignado.inicio,
+                        tamano: proceso.bloqueAsignado.tamano
+                    } : null
+                });
+                this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
+                    procesoId: proceso.id,
+                    estadoAnterior: 'EnLiberacion',
+                    estadoNuevo: 'Finalizado'
+                });
             }
         }
+    }
 
-        // 3. Ejecutar procesos en memoria y verificar terminación
-        const procesosEjecutando = this.listaProcesos.filter(p => p.estado === "ejecutando");
-        procesosEjecutando.forEach(proceso => {
-            proceso.disminuirTiempo(1);
+    procesarMemoria() {
+        let procesosEnMemoria = this.listaProcesos.obtenerProcesosPorEstado('EnMemoria');
+        for (let proceso of procesosEnMemoria) {
+            if (proceso.decrementarTiempo()) {
+                proceso.iniciarLiberacion(this.configuracion.getTiempoLiberacion(), this.tiempoGlobal);
+                this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
+                    procesoId: proceso.id,
+                    estadoAnterior: 'EnMemoria',
+                    estadoNuevo: 'EnLiberacion'
+                });
+            }
+        }
+    }
+
+    procesarCarga() {
+        let procesosEnCarga = this.listaProcesos.obtenerProcesosPorEstado('EnCarga');
+        for (let proceso of procesosEnCarga) {
+            if (proceso.decrementarTiempo()) {
+                proceso.iniciarMemoria(this.tiempoGlobal);
+                this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
+                    procesoId: proceso.id,
+                    estadoAnterior: 'EnCarga',
+                    estadoNuevo: 'EnMemoria'
+                });
+            }
+        }
+    }
+
+    procesarSeleccion() {
+        let procesosEnSeleccion = this.listaProcesos.obtenerProcesosPorEstado('EnSeleccion');
+        for (let proceso of procesosEnSeleccion) {
+            if (proceso.decrementarTiempo()) {
+                proceso.iniciarCarga(this.configuracion.getTiempoCarga(), this.tiempoGlobal);
+                this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
+                    procesoId: proceso.id,
+                    estadoAnterior: 'EnSeleccion',
+                    estadoNuevo: 'EnCarga'
+                });
+            }
+        }
+    }
+
+    asignarNuevosProcesos() {
+        // Si hay procesos en EnSeleccion o EnCarga, no se puede asignar
+        if (this.listaProcesos.hayProcesosEnEstado('EnSeleccion') || 
+            this.listaProcesos.hayProcesosEnEstado('EnCarga')) {
+            return;
+        }
+
+        // Obtener procesos en espera ordenados por tiempo de llegada
+        let procesosEnEspera = this.listaProcesos.obtenerProcesosEnEspera(this.tiempoGlobal);
+        
+        // Si no hay procesos en espera, salir
+        if (procesosEnEspera.length === 0) {
+            return;
+        }
+
+        // Tomar solo el primer proceso de la lista (el que llegó primero)
+        let proceso = procesosEnEspera[0];
+        let bloqueAsignado = null;
+        
+        switch (this.configuracion.getEstrategia()) {
+            case 'FirstFit':
+                bloqueAsignado = Estrategias.firstFit(this.memoria, proceso.memReq);
+                break;
+            case 'BestFit':
+                bloqueAsignado = Estrategias.bestFit(this.memoria, proceso.memReq);
+                break;
+            case 'WorstFit':
+                bloqueAsignado = Estrategias.worstFit(this.memoria, proceso.memReq);
+                break;
+            case 'NextFit':
+                bloqueAsignado = Estrategias.nextFit(this.memoria, proceso.memReq);
+                break;
+        }
+        
+        if (bloqueAsignado) {
+            if (bloqueAsignado.tamano > proceso.memReq) {
+                let nuevoBloqueLibre = bloqueAsignado.dividir(proceso.memReq);
+                if (nuevoBloqueLibre) {
+                    let index = this.memoria.bloques.indexOf(bloqueAsignado);
+                    this.memoria.bloques.splice(index + 1, 0, nuevoBloqueLibre);
+                }
+            }
+            bloqueAsignado.libre = false;
+            bloqueAsignado.proceso = proceso;
+            proceso.bloqueAsignado = bloqueAsignado;
             
-            if(proceso.estaTerminado()) {
-                this.memoria.liberar(proceso, this.tiempoActual);
-                this.eventos.push(new Evento(
-                    this.tiempoActual,
-                    `Proceso ${proceso.nombre} terminado - Memoria liberada`,
-                    this.memoria.snapshot(),
-                    [...this.listaProcesos]
-                ));
-                huboCambios = true;
-            }
-        });
-
-        // 4. Crear snapshot si hubo cambios
-        if(huboCambios || procesosEjecutando.length > 0) {
-            this.crearSnapshot(`Tiempo ${this.tiempoActual}`);
+            proceso.iniciarSeleccion(this.configuracion.getTiempoSeleccion(), this.tiempoGlobal);
+            this.registros.registrarEvento(this.tiempoGlobal, 'ASIGNACION', {
+                procesoId: proceso.id,
+                bloque: {
+                    inicio: bloqueAsignado.inicio,
+                    tamano: bloqueAsignado.tamano
+                }
+            });
+            this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
+                procesoId: proceso.id,
+                estadoAnterior: 'EnEspera',
+                estadoNuevo: 'EnSeleccion'
+            });
         }
     }
 
-    crearSnapshot(descripcion) {
-        let texto = `\n==================== TIEMPO ${this.tiempoActual} ====================\n`;
-        texto += descripcion + "\n\n";
-        texto += this.memoria.toString();
-        
-        // Estado de procesos
-        texto += "\nEstado de Procesos:\n";
-        this.listaProcesos.forEach(proceso => {
-            let estado = proceso.estado;
-            let info = `${proceso.nombre} (${proceso.memReq}KB) - ${estado.toUpperCase()}`;
-            if(proceso.estado === "ejecutando") {
-                info += ` - Tiempo restante: ${proceso.tiempoRestante}`;
-            } else if(proceso.estado === "listo" && proceso.arrivaltime > this.tiempoActual) {
-                info += ` - Llega en tiempo ${proceso.arrivaltime}`;
-            }
-            texto += info + "\n";
-        });
-        
-        // Cola de espera
-        if(this.colaEspera.length > 0) {
-            texto += `\nCola de espera: ${this.colaEspera.map(p => p.nombre).join(', ')}\n`;
-        }
-        
-        texto += `\nFragmentación externa: ${this.memoria.obtenerFragmentacionExterna().toFixed(2)}%\n`;
-        texto += "================================================\n";
+    hayProcesosActivos() {
+        return this.listaProcesos.hayProcesosActivos();
+    }
 
-        const snapshot = new Snapshot(
-            this.tiempoActual,
-            this.memoria.snapshot(),
-            [...this.listaProcesos],
-            texto
-        );
+    tomarSnapshot() {
+        let snapshot = {
+            tiempo: this.tiempoGlobal,
+            memoria: this.memoria.getEstado(),
+            procesos: this.listaProcesos.getTodos().map(proceso => ({
+                id: proceso.id,
+                estado: proceso.estado,
+                arrivaltime: proceso.arrivaltime,
+                duracion: proceso.duracion,
+                memReq: proceso.memReq,
+                tiempoSeleccionRestante: proceso.tiempoSeleccionRestante,
+                tiempoCargaRestante: proceso.tiempoCargaRestante,
+                tiempoLiberacionRestante: proceso.tiempoLiberacionRestante,
+                tiempoInicio: proceso.tiempoInicio,
+                tiempoFin: proceso.tiempoFin,
+                bloqueAsignado: proceso.bloqueAsignado ? {
+                    inicio: proceso.bloqueAsignado.inicio,
+                    tamano: proceso.bloqueAsignado.tamano
+                } : null
+            }))
+        };
         
         this.snapshots.push(snapshot);
-        this.reporte.agregarLinea(texto);
     }
 
-    simulacionCompleta() {
-        return this.listaProcesos.every(p => p.estado === "terminado");
+    getSnapshots() {
+        return this.snapshots;
     }
 
-    generarReporteCompleto() {
-        this.reporte.agregarLinea("\n=== RESULTADOS FINALES ===\n");
-        
-        // Indicadores por proceso
-        let tiempoRetornoTotal = 0;
-        this.reporte.agregarLinea("Tiempos de Retorno por Proceso:");
-        this.listaProcesos.forEach(proceso => {
-            const tr = proceso.calcularTiempoRetorno();
-            tiempoRetornoTotal += tr;
-            this.reporte.agregarLinea(`${proceso.nombre}: ${tr} unidades de tiempo`);
-        });
-        
-        // Indicadores de la tanda
-        const tiempoMedioRetorno = tiempoRetornoTotal / this.listaProcesos.length;
-        const fragmentacionFinal = this.memoria.obtenerFragmentacionExterna();
-        
-        this.reporte.agregarLinea(`\nTiempo total de simulación: ${this.tiempoActual} unidades`);
-        this.reporte.agregarLinea(`Tiempo medio de retorno: ${tiempoMedioRetorno.toFixed(2)} unidades`);
-        this.reporte.agregarLinea(`Índice de fragmentación externa final: ${fragmentacionFinal.toFixed(2)}%`);
-        this.reporte.agregarLinea(`Estrategia utilizada: ${this.configuracion.estrategia}`);
+    getEstadoActual() {
+        return this.snapshots[this.snapshots.length - 1];
     }
 
-    obtenerTareasGantt() {
-        return this.listaProcesos
-            .filter(p => p.tiempoInicio !== null)
-            .map(p => p.toGanttTask());
+    reiniciar() {
+        this.inicializar(this.configuracion);
+    }
+
+    getRegistros() {
+        return this.registros;
+    }
+
+    getListaProcesos() {
+        return this.listaProcesos;
+    }
+
+    getMemoria() {
+        return this.memoria;
     }
 }

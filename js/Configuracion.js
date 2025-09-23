@@ -1,74 +1,52 @@
 class Configuracion {
-
     constructor() {
-        this.estrategia = "FirstFit";
-        this.tamanoMemoria = 1024; 
-        this.procesosJSON = [];
-        this.tCarga = 1;
-        this.tAsignacion = 1;
-        this.tLiberacion = 1;
+        this.tamanoMemoria = 1024;
+        this.estrategia = 'FirstFit';
+        this.tiempoSeleccion = 0;
+        this.tiempoCarga = 0;
+        this.tiempoLiberacion = 0;
+        this.tanda = null;
     }
 
-    validar() {
-        // Validar tamaño de memoria
-        if (this.tamanoMemoria <= 0) {
-            throw new Error("El tamaño de memoria debe ser mayor a 0");
-        }
-        
-        // Validar estrategia
-        const estrategiasValidas = ["FirstFit", "NextFit", "BestFit", "WorstFit"];
-        if (!estrategiasValidas.includes(this.estrategia)) {
-            throw new Error(`Estrategia no válida. Use: ${estrategiasValidas.join(', ')}`);
-        }
-        
-        // Validar procesos
-        if (!Array.isArray(this.procesosJSON) || this.procesosJSON.length === 0) {
-            throw new Error("Debe proporcionar al menos un proceso");
-        }
-        
-        // Validar estructura de cada proceso
-        this.procesosJSON.forEach((proceso, index) => {
-            // Validar ID (debe existir y ser string)
-            if (typeof proceso.id !== 'string' || proceso.id.trim() === '') {
-                throw new Error(`Proceso ${index}: debe tener un id (string) no vacío`);
-            }
-            
-            // Validar arrivaltime
-            if (typeof proceso.arrivaltime !== 'number' || proceso.arrivaltime < 0) {
-                throw new Error(`Proceso ${proceso.id}: tiempo de llegada inválido`);
-            }
-            
-            // Validar duracion
-            if (typeof proceso.duracion !== 'number' || proceso.duracion <= 0) {
-                throw new Error(`Proceso ${proceso.id}: duración debe ser mayor a 0`);
-            }
-            
-            // Validar memReq
-            if (typeof proceso.memReq !== 'number' || proceso.memReq <= 0) {
-                throw new Error(`Proceso ${proceso.id}: memoria requerida debe ser mayor a 0`);
-            }
-            
-            // Validar que no exceda la memoria disponible
-            if (proceso.memReq > this.tamanoMemoria) {
-                throw new Error(`Proceso ${proceso.id}: requiere más memoria de la disponible`);
-            }
-        });
-        
-        // Validar tiempos
-        if (this.tCarga < 0 || this.tAsignacion < 0 || this.tLiberacion < 0) {
-            throw new Error("Los tiempos no pueden ser negativos");
-        }
-        
-        return true;
+    setTamanoMemoria(tamano) {
+        this.tamanoMemoria = tamano;
     }
 
-    static fromFormData(formData) {
-        const config = new Configuracion();
-        config.estrategia = formData.estrategia || "FirstFit";
-        config.tamanoMemoria = parseInt(formData.tamanoMemoria) || 1024;
-        config.tCarga = parseInt(formData.tCarga) || 1;
-        config.tAsignacion = parseInt(formData.tAsignacion) || 1;
-        config.tLiberacion = parseInt(formData.tLiberacion) || 1;
-        return config;
+    setEstrategia(estrategia) {
+        this.estrategia = estrategia;
+    }
+
+    setTiempos(tiempoSeleccion, tiempoCarga, tiempoLiberacion) {
+        this.tiempoSeleccion = tiempoSeleccion;
+        this.tiempoCarga = tiempoCarga;
+        this.tiempoLiberacion = tiempoLiberacion;
+    }
+
+    setTanda(tanda) {
+        this.tanda = tanda;
+    }
+
+    getTamanoMemoria() {
+        return this.tamanoMemoria;
+    }
+
+    getEstrategia() {
+        return this.estrategia;
+    }
+
+    getTiempoSeleccion() {
+        return this.tiempoSeleccion;
+    }
+
+    getTiempoCarga() {
+        return this.tiempoCarga;
+    }
+
+    getTiempoLiberacion() {
+        return this.tiempoLiberacion;
+    }
+
+    getTanda() {
+        return this.tanda;
     }
 }

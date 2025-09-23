@@ -1,0 +1,41 @@
+INICIO
+  tiempoGlobal = 0
+  estados = { todos los procesos en Pendiente }
+  memoria = una sola partición libre del tamaño total
+
+MIENTRAS (existan procesos en estado != Finalizado)
+    # 1. ARRIBOS
+    mover a Espera todos los procesos con arribo == tiempoGlobal
+
+    # 2. ACTUALIZAR TIMERS
+    decrementar timer de procesos en EnSeleccion, EnCarga, EnMemoria, EnLiberacion
+
+    # 3. FINALIZACIÓN DE TIMERS
+    - Si timer de Selección == 0 → pasar proceso a EnCarga, setear timerCarga
+    - Si timer de Carga == 0 → pasar proceso a EnMemoria, setear timerDuración
+    - Si timer de Ejecución == 0 → registrar tiempoFin, pasar proceso a EnLiberacion, setear timerLiberación
+    - Si timer de Liberación == 0 → liberar partición, coalescer huecos libres
+
+    # 4. INTENTAR ASIGNACIÓN
+    para cada proceso en Espera con arribo <= tiempoGlobal:
+        si hay partición disponible según estrategia:
+            reservar partición
+            pasar a EnSeleccion con timerSeleccion
+            registrar evento de asignación
+        si no hay partición:
+            permanecer en Espera
+
+    # 5. REGISTRAR EVENTOS
+    guardar en log: cambios de estado, ocupación de particiones
+
+    # 6. AVANZAR TIEMPO
+    tiempoGlobal = tiempoGlobal + 1
+
+FIN MIENTRAS
+
+# MÉTRICAS
+calcular tiempos de retorno individuales y promedio
+calcular índice de fragmentación externa
+generar Gantt y archivo de eventos
+
+FIN

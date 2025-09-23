@@ -3,54 +3,69 @@ class Proceso {
         this.id = id;
         this.arrivaltime = arrivaltime;
         this.duracion = duracion;
-        this.tiempoRestante = duracion;
         this.memReq = memReq;
-        this.estado = "listo"; // listo / ejecutando / terminado
+        this.estado = 'EnEspera'; // Estados: EnEspera, EnSeleccion, EnCarga, EnMemoria, EnLiberacion, Finalizado
+        this.tiempoSeleccionRestante = 0;
+        this.tiempoCargaRestante = 0;
+        this.tiempoLiberacionRestante = 0;
         this.tiempoInicio = null;
-        this.tiempoFinal = null;
-        this.tiempoRetorno = null;
+        this.tiempoFin = null;
+        this.bloqueAsignado = null;
     }
 
-    iniciar(tiempo) {
-        this.tiempoInicio = tiempo;
-        this.estado = "ejecutando";
+    iniciarSeleccion(tiempoSeleccion, tiempoActual) {
+        this.estado = 'EnSeleccion';
+        this.tiempoSeleccionRestante = tiempoSeleccion;
     }
 
-    finalizar(tiempo) {
-        this.tiempoFinal = tiempo;
-        this.estado = "terminado";
+    iniciarCarga(tiempoCarga, tiempoActual) {
+        this.estado = 'EnCarga';
+        this.tiempoCargaRestante = tiempoCarga;
     }
 
-    disminuirTiempo(unidades = 1) {
-        if(this.tiempoRestante > 0) {
-            this.tiempoRestante -= unidades;
-            if(this.tiempoRestante <= 0) {
-                this.tiempoRestante = 0;
-            }
+    iniciarMemoria(tiempoActual) {
+        this.estado = 'EnMemoria';
+        this.tiempoInicio = tiempoActual;
+    }
+
+    iniciarLiberacion(tiempoLiberacion, tiempoActual) {
+        this.estado = 'EnLiberacion';
+        this.tiempoLiberacionRestante = tiempoLiberacion;
+    }
+
+    finalizar(tiempoActual) {
+        this.estado = 'Finalizado';
+        this.tiempoFin = tiempoActual;
+    }
+
+    decrementarTiempo() {
+        switch (this.estado) {
+            case 'EnSeleccion':
+                if (this.tiempoSeleccionRestante > 0) {
+                    this.tiempoSeleccionRestante--;
+                    return this.tiempoSeleccionRestante === 0;
+                }
+                return false;
+            case 'EnCarga':
+                if (this.tiempoCargaRestante > 0) {
+                    this.tiempoCargaRestante--;
+                    return this.tiempoCargaRestante === 0;
+                }
+                return false;
+            case 'EnMemoria':
+                if (this.duracion > 0) {
+                    this.duracion--;
+                    return this.duracion === 0;
+                }
+                return false;
+            case 'EnLiberacion':
+                if (this.tiempoLiberacionRestante > 0) {
+                    this.tiempoLiberacionRestante--;
+                    return this.tiempoLiberacionRestante === 0;
+                }
+                return false;
+            default:
+                return false;
         }
-    }
-
-    estaTerminado() {
-        return this.estado === "terminado";
-    }
-
-    calcularTiempoRetorno() {
-        if (this.tiempoFinal !== null) {
-            this.tiempoRetorno = this.tiempoFinal - this.arrivaltime;
-            return this.tiempoRetorno;
-        }
-        return null;
-    }
-
-    // Para el diagrama de Gantt
-    toGanttTask() {
-        return {
-            id: this.id,
-            start: new Date(2024, 0, 1, 0, this.tiempoInicio || 0),
-            end: new Date(2024, 0, 1, 0, (this.tiempoInicio || 0) + this.duracion),
-            progress: this.estado === "terminado" ? 100 : 
-                     this.estado === "ejecutando" ? 
-                     ((this.duracion - this.tiempoRestante) / this.duracion) * 100 : 0
-        };
     }
 }

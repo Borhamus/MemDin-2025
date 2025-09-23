@@ -1,0 +1,92 @@
+classDiagram
+    %% =========================
+    %% CLASES PRINCIPALES
+    %% =========================
+
+    class Configuracion {
+      +int tiempoSeleccion
+      +int tiempoCarga
+      +int tiempoLiberacion
+      +int tamanioMemoria
+      +string estrategia
+      +cargarDesdeJSON(file)
+    }
+
+    class Estrategias {
+      +asignarProceso(proceso, memoria) bool
+      -firstFit()
+      -bestFit()
+      -worstFit()
+      -nextFit()
+    }
+
+    class Memoria {
+      +int tamanioTotal
+      +List~BloqueMemoria~ bloques
+      +bool asignar(proceso, estrategia)
+      +liberar(proceso)
+      +coalescer()
+    }
+
+    class BloqueMemoria {
+      +int inicio
+      +int tamanio
+      +bool libre
+      +Proceso* proceso
+    }
+
+    class ListaDeProcesos {
+      +List~Proceso~ procesos
+      +cargarDesdeJSON(file)
+      +getPendientes()
+      +getEnEspera(tiempoGlobal)
+    }
+
+    class Proceso {
+      +string nombre
+      +int arribo
+      +int duracion
+      +int memoriaRequerida
+      +string estado
+      +int timer
+      +int tiempoInicio
+      +int tiempoFin
+      +avanzarTiempo()
+    }
+
+    class Simulacion {
+      +int tiempoGlobal
+      +Configuracion config
+      +ListaDeProcesos lista
+      +Memoria memoria
+      +Reporte reporte
+      +iniciar()
+      +ciclo()
+      +finalizar()
+    }
+
+    class Reporte {
+      +List~Evento~ eventos
+      +generarGantt()
+      +generarArchivoSalida()
+      +calcularMetricas()
+    }
+
+    class Grafica {
+      +dibujarGantt(datos)
+      +mostrarMetricas(metricas)
+    }
+
+    %% =========================
+    %% RELACIONES
+    %% =========================
+
+    Configuracion --> Simulacion : se usa en
+    Estrategias --> Memoria : define asignación
+    Memoria "1" *-- "many" BloqueMemoria
+    Memoria --> Proceso : aloja
+    ListaDeProcesos "1" *-- "many" Proceso
+    Simulacion --> ListaDeProcesos
+    Simulacion --> Memoria
+    Simulacion --> Reporte
+    Reporte --> Grafica

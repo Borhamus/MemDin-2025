@@ -1,0 +1,34 @@
+flowchart TD
+    %% Dirección top-down
+    A(["Inicio"]) --> B["Inicializar: tiempoGlobal = 0, todos los procesos en estado Pendiente, memoria = partición libre total"]
+
+    B --> C{"¿Existen procesos con estado ≠ Finalizado?"}
+    C -- No --> M["Calcular métricas finales: tiempos de retorno medios, fragmentación externa"]
+    M --> N["Generar gráfico Gantt y archivo de eventos"]
+    N --> Z(["Fin Simulación"])
+
+    C -- Sí --> D["Registrar arribos: mover a Espera los procesos con arribo == tiempoGlobal"]
+
+    D --> E["Decrementar timers de procesos en EnSeleccion, EnCarga, EnMemoria, EnLiberacion"]
+
+    E --> F["Procesos cuya timer de Selección = 0 → pasar a EnCarga; setear timerCarga"]
+    F --> G["Procesos cuya timer de Carga = 0 → pasar a EnMemoria; setear timerDuración"]
+
+    G --> H{"¿Algún proceso en EnMemoria con duracion (ejecución) = 0?"}
+    H -- Sí --> I["Registrar tiempo de finalización del proceso; pasar a EnLiberacion; setear timerLiberacion"]
+    H -- No --> J["Seguir en EnMemoria"]
+
+    I --> K["Liberación: procesos cuya timerLiberacion = 0 → liberar partición correspondiente"]
+    K --> L["Coalescer huecos libres adyacentes (unir bloques)"]
+
+    J --> L
+
+    L --> O["Intentar asignar procesos en Espera con arribo <= tiempoGlobal"]
+    O -- Partición disponible --> P["Reservar partición; pasar a EnSeleccion con timerSeleccion; registrar evento de asignación"]
+    O -- No disponible --> Q["Procesos permanecen en Espera"]
+
+    P --> R["(Opcional) registro de evento de asignación en log"]
+    Q --> R
+
+    R --> S["Avanzar tiempoGlobal = tiempoGlobal + 1"]
+    S --> C

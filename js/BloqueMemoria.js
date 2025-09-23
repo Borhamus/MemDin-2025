@@ -1,42 +1,41 @@
 class BloqueMemoria {
-    constructor(inicio, tamano) {
+    constructor(inicio, tamano, libre = true, proceso = null) {
         this.inicio = inicio;
         this.tamano = tamano;
-        this.estado = "libre";
-        this.procesoAsignado = null;
+        this.libre = libre;
+        this.proceso = proceso;
     }
 
-    estaLibre() {
-        return this.estado === "libre";
+    puedeUnir(otroBloque) {
+        return this.libre && otroBloque.libre && 
+               ((this.inicio + this.tamano === otroBloque.inicio) || 
+                (otroBloque.inicio + otroBloque.tamano === this.inicio));
     }
 
-    dividir(tamanoNuevo) {
-        if(tamanoNuevo >= this.tamano) return null;
+    unir(otroBloque) {
+        if (!this.puedeUnir(otroBloque)) return false;
         
-        const nuevoBloque = new BloqueMemoria(
-            this.inicio + tamanoNuevo, 
-            this.tamano - tamanoNuevo
+        let nuevoInicio = Math.min(this.inicio, otroBloque.inicio);
+        let nuevoTamano = this.tamano + otroBloque.tamano;
+        
+        this.inicio = nuevoInicio;
+        this.tamano = nuevoTamano;
+        
+        return true;
+    }
+
+    dividir(tamanoOcupado) {
+        if (this.tamano <= tamanoOcupado || !this.libre) return null;
+        
+        let nuevoBloqueLibre = new BloqueMemoria(
+            this.inicio + tamanoOcupado,
+            this.tamano - tamanoOcupado,
+            true
         );
-        this.tamano = tamanoNuevo;
-        return nuevoBloque;
-    }
-
-    fusionarSiguiente(siguiente) {
-        if(this.estaLibre() && siguiente.estaLibre() && 
-           this.inicio + this.tamano === siguiente.inicio) {
-            this.tamano += siguiente.tamano;
-            return true;
-        }
-        return false;
-    }
-
-    ocupar(proceso) {
-        this.estado = "ocupado";
-        this.procesoAsignado = proceso;
-    }
-
-    liberar() {
-        this.estado = "libre";
-        this.procesoAsignado = null;
+        
+        this.tamano = tamanoOcupado;
+        this.libre = false;
+        
+        return nuevoBloqueLibre;
     }
 }

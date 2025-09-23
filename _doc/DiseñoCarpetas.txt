@@ -1,0 +1,32 @@
+MemDin-2025/
+ │
+ ├── _doc/ <- Documentacion.
+ │
+ ├── js/               <- Tenemos que ver que clases se ajustan mejor al programa que quiero construir.
+ │   ├── Configuracion.js
+ │   ├── Estrategias.js
+ │   ├── Memoria.js
+ │   ├── BloqueMemoria.js
+ │   ├── ListaDeProcesos.js
+ │   ├── Proceso.js
+ │   ├── Reporte.js
+ │   ├── Simulacion.js
+ │   └── Grafica.js
+ │
+ ├── sim/                   <- Aqui van las simulacciones finalizadas.
+ │   ├── Simulacion_1.txt
+ │   └── Simulacion_2.txt
+ ├── css/
+ │   ├── frappe-gantt.css
+ │   └── style.css
+ │
+ ├── data/
+ │   ├── tanda_1.json
+ │   ├── tanda_2.json
+ │   ├── tanda_3.json
+ │   └── tanda_4.json
+ │
+ ├── lib/
+ │   └── frappe-gantt.umd.js
+ │
+ └── index.html
