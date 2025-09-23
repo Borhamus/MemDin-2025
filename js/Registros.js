@@ -6,6 +6,8 @@ class Evento {
     }
 }
 
+// :D
+
 class Registros {
     constructor() {
         this.eventos = [];
