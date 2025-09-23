@@ -25,7 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
         { nombre: "Tanda 1", archivo: "tanda_1.json" },
         { nombre: "Tanda 2", archivo: "tanda_2.json" },
         { nombre: "Tanda 3", archivo: "tanda_3.json" },
-        { nombre: "Tanda 4", archivo: "tanda_4.json" }
+        { nombre: "Tanda 4", archivo: "tanda_4.json" },
+        { nombre: "Tanda 5", archivo: "tanda_5.json" }
     ];
     
     function cargarTandas() {

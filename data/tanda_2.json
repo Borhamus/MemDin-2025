@@ -1,8 +1,12 @@
 [
-  {"id": "P1", "arrivaltime": 0, "duracion": 15, "memReq": 40},
-  {"id": "P2", "arrivaltime": 1, "duracion": 4,  "memReq": 5},
-  {"id": "P3", "arrivaltime": 2, "duracion": 12, "memReq": 20},
-  {"id": "P4", "arrivaltime": 3, "duracion": 6,  "memReq": 8},
-  {"id": "P5", "arrivaltime": 5, "duracion": 10, "memReq": 35},
-  {"id": "P6", "arrivaltime": 7, "duracion": 3,  "memReq": 3}
+  {"id": "P1",  "arrivaltime": 0,  "duracion": 4, "memReq": 110 },
+  {"id": "P2",  "arrivaltime": 1,  "duracion": 6, "memReq": 140 },
+  {"id": "P3",  "arrivaltime": 2,  "duracion": 5, "memReq": 200 },
+  {"id": "P4",  "arrivaltime": 3,  "duracion": 7, "memReq": 95  },
+  {"id": "P5",  "arrivaltime": 4,  "duracion": 8, "memReq": 170 },
+  {"id": "P6",  "arrivaltime": 5,  "duracion": 3, "memReq": 250 },
+  {"id": "P7",  "arrivaltime": 6,  "duracion": 6, "memReq": 120 },
+  {"id": "P8",  "arrivaltime": 7,  "duracion": 5, "memReq": 80  },
+  {"id": "P9",  "arrivaltime": 8,  "duracion": 4, "memReq": 210 },
+  {"id": "P10", "arrivaltime": 10, "duracion": 7, "memReq": 160 }
 ]

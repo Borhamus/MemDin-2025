@@ -1,6 +1,10 @@
 [
-  {"id": "P1", "arrivaltime": 0, "duracion": 10, "memReq": 20},
-  {"id": "P2", "arrivaltime": 2, "duracion": 8,  "memReq": 15},
-  {"id": "P3", "arrivaltime": 4, "duracion": 6,  "memReq": 25},
-  {"id": "P4", "arrivaltime": 6, "duracion": 12, "memReq": 10}
+  {"id": "P1", "arrivaltime": 0, "duracion": 8, "memReq": 200 },
+  {"id": "P2", "arrivaltime": 1, "duracion": 4, "memReq": 95  },
+  {"id": "P3", "arrivaltime": 2, "duracion": 5, "memReq": 150 },
+  {"id": "P4", "arrivaltime": 3, "duracion": 6, "memReq": 70  },
+  {"id": "P5", "arrivaltime": 5, "duracion": 7, "memReq": 180 },
+  {"id": "P6", "arrivaltime": 6, "duracion": 3, "memReq": 120 },
+  {"id": "P7", "arrivaltime": 7, "duracion": 6, "memReq": 250 },
+  {"id": "P8", "arrivaltime": 9, "duracion": 5, "memReq": 140 }
 ]

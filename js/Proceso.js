@@ -18,16 +18,22 @@ class Proceso {
     iniciarSeleccion(tiempoSeleccion, tiempoActual) {
         this.estado = 'EnSeleccion';
         this.tiempoSeleccionRestante = tiempoSeleccion;
+        // Si el tiempo de selección es 0, marcar como completado inmediatamente
+        return tiempoSeleccion === 0;
     }
 
     iniciarCarga(tiempoCarga, tiempoActual) {
         this.estado = 'EnCarga';
         this.tiempoCargaRestante = tiempoCarga;
+        // Si el tiempo de carga es 0, marcar como completado inmediatamente
+        return tiempoCarga === 0;
     }
 
     iniciarMemoria(tiempoActual) {
         this.estado = 'EnMemoria';
         this.tiempoInicio = tiempoActual;
+        // La memoria siempre tiene duración > 0, así que nunca retorna true inmediatamente
+        return false;
     }
 
     iniciarLiberacion(tiempoLiberacion, tiempoActual) {
@@ -37,6 +43,8 @@ class Proceso {
         if (this.tiempoFinMemoria === null) {
             this.tiempoFinMemoria = tiempoActual;
         }
+        // Si el tiempo de liberación es 0, marcar como completado inmediatamente
+        return tiempoLiberacion === 0;
     }
 
     finalizar(tiempoActual) {

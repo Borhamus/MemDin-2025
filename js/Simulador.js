@@ -128,7 +128,10 @@ class Simulador {
     procesarLiberacion() {
         let procesosEnLiberacion = this.listaProcesos.obtenerProcesosPorEstado('EnLiberacion');
         for (let proceso of procesosEnLiberacion) {
-            if (proceso.decrementarTiempo()) {
+            let tiempoCompletado = proceso.decrementarTiempo();
+            
+            // Si el tiempo de liberación era 0, el proceso ya está listo para finalizar
+            if (tiempoCompletado || proceso.tiempoLiberacionRestante === 0) {
                 this.memoria.liberarMemoria(proceso);
                 proceso.finalizar(this.tiempoGlobal);
                 this.registros.registrarEvento(this.tiempoGlobal, 'LIBERACION', {
@@ -154,12 +157,30 @@ class Simulador {
                 // Actualizar el tiempo de retorno de la tanda cuando un proceso termina su ejecución en memoria
                 this.tiempoDeRetornoDeLaTanda = Math.max(this.tiempoDeRetornoDeLaTanda, this.tiempoGlobal);
                 
-                proceso.iniciarLiberacion(this.configuracion.getTiempoLiberacion(), this.tiempoGlobal);
+                let completadoInmediatamente = proceso.iniciarLiberacion(this.configuracion.getTiempoLiberacion(), this.tiempoGlobal);
                 this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
                     procesoId: proceso.id,
                     estadoAnterior: 'EnMemoria',
                     estadoNuevo: 'EnLiberacion'
                 });
+                
+                // Si el tiempo de liberación es 0, procesar inmediatamente
+                if (completadoInmediatamente) {
+                    this.memoria.liberarMemoria(proceso);
+                    proceso.finalizar(this.tiempoGlobal);
+                    this.registros.registrarEvento(this.tiempoGlobal, 'LIBERACION', {
+                        procesoId: proceso.id,
+                        bloque: proceso.bloqueAsignado ? {
+                            inicio: proceso.bloqueAsignado.inicio,
+                            tamano: proceso.bloqueAsignado.tamano
+                        } : null
+                    });
+                    this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
+                        procesoId: proceso.id,
+                        estadoAnterior: 'EnLiberacion',
+                        estadoNuevo: 'Finalizado'
+                    });
+                }
             }
         }
     }
@@ -167,7 +188,10 @@ class Simulador {
     procesarCarga() {
         let procesosEnCarga = this.listaProcesos.obtenerProcesosPorEstado('EnCarga');
         for (let proceso of procesosEnCarga) {
-            if (proceso.decrementarTiempo()) {
+            let tiempoCompletado = proceso.decrementarTiempo();
+            
+            // Si el tiempo de carga era 0, el proceso ya está listo para ir a memoria
+            if (tiempoCompletado || proceso.tiempoCargaRestante === 0) {
                 proceso.iniciarMemoria(this.tiempoGlobal);
                 this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
                     procesoId: proceso.id,
@@ -181,13 +205,26 @@ class Simulador {
     procesarSeleccion() {
         let procesosEnSeleccion = this.listaProcesos.obtenerProcesosPorEstado('EnSeleccion');
         for (let proceso of procesosEnSeleccion) {
-            if (proceso.decrementarTiempo()) {
-                proceso.iniciarCarga(this.configuracion.getTiempoCarga(), this.tiempoGlobal);
+            let tiempoCompletado = proceso.decrementarTiempo();
+            
+            // Si el tiempo de selección era 0, el proceso ya está listo para carga
+            if (tiempoCompletado || proceso.tiempoSeleccionRestante === 0) {
+                let completadoInmediatamente = proceso.iniciarCarga(this.configuracion.getTiempoCarga(), this.tiempoGlobal);
                 this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
                     procesoId: proceso.id,
                     estadoAnterior: 'EnSeleccion',
                     estadoNuevo: 'EnCarga'
                 });
+                
+                // Si el tiempo de carga es 0, procesar inmediatamente
+                if (completadoInmediatamente) {
+                    proceso.iniciarMemoria(this.tiempoGlobal);
+                    this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
+                        procesoId: proceso.id,
+                        estadoAnterior: 'EnCarga',
+                        estadoNuevo: 'EnMemoria'
+                    });
+                }
             }
         }
     }
@@ -238,7 +275,8 @@ class Simulador {
             bloqueAsignado.proceso = proceso;
             proceso.bloqueAsignado = bloqueAsignado;
             
-            proceso.iniciarSeleccion(this.configuracion.getTiempoSeleccion(), this.tiempoGlobal);
+            // Iniciar la cadena de transiciones
+            let completadoSeleccion = proceso.iniciarSeleccion(this.configuracion.getTiempoSeleccion(), this.tiempoGlobal);
             this.registros.registrarEvento(this.tiempoGlobal, 'ASIGNACION', {
                 procesoId: proceso.id,
                 bloque: {
@@ -251,6 +289,26 @@ class Simulador {
                 estadoAnterior: 'EnEspera',
                 estadoNuevo: 'EnSeleccion'
             });
+            
+            // Si el tiempo de selección es 0, continuar con carga
+            if (completadoSeleccion) {
+                let completadoCarga = proceso.iniciarCarga(this.configuracion.getTiempoCarga(), this.tiempoGlobal);
+                this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
+                    procesoId: proceso.id,
+                    estadoAnterior: 'EnSeleccion',
+                    estadoNuevo: 'EnCarga'
+                });
+                
+                // Si el tiempo de carga es 0, ir directamente a memoria
+                if (completadoCarga) {
+                    proceso.iniciarMemoria(this.tiempoGlobal);
+                    this.registros.registrarEvento(this.tiempoGlobal, 'CAMBIO_ESTADO', {
+                        procesoId: proceso.id,
+                        estadoAnterior: 'EnCarga',
+                        estadoNuevo: 'EnMemoria'
+                    });
+                }
+            }
         }
     }
 
