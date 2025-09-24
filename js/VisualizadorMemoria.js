@@ -42,20 +42,25 @@ class VisualizadorMemoria {
         // Limpiar contenedor
         contenedor.innerHTML = '';
 
-        // Calcular dimensiones
-        const anchoCanvas = this.config.margenIzquierdo +
-                           (this.snapshots.length * this.config.anchoColumna) +
-                           this.config.margenDerecho;
-        const altoCanvas = this.config.margenSuperior +
-                          this.obtenerTamanoMemoria() +
-                          this.config.margenInferior;
+        // Calcular dimensiones del canvas basado en el contenido
+        const anchoCalculado = this.config.margenIzquierdo +
+                              (this.snapshots.length * this.config.anchoColumna) +
+                              this.config.margenDerecho;
+        const altoCalculado = this.config.margenSuperior +
+                             this.obtenerTamanoMemoria() +
+                             this.config.margenInferior;
 
-        // Crear canvas
+        // Crear canvas con dimensiones calculadas
         this.canvas = document.createElement('canvas');
-        this.canvas.width = anchoCanvas;
-        this.canvas.height = altoCanvas;
-        this.canvas.style.border = '1px solid #00ff00';
+        this.canvas.width = anchoCalculado;
+        this.canvas.height = altoCalculado;
         this.canvas.style.backgroundColor = this.config.colores.fondo;
+        this.canvas.style.display = 'block';
+        this.canvas.style.margin = '0';
+        this.canvas.style.padding = '0';
+
+        // CRÍTICO: NO establecer width/height CSS que limiten el canvas
+        // El contenedor #gantt ya tiene overflow: scroll configurado en CSS
 
         contenedor.appendChild(this.canvas);
         this.ctx = this.canvas.getContext('2d');
@@ -63,6 +68,11 @@ class VisualizadorMemoria {
         // Agregar interactividad
         this.canvas.addEventListener('mousemove', (e) => this.onMouseMove(e));
         this.canvas.addEventListener('click', (e) => this.onClick(e));
+
+        // Debug: Mostrar dimensiones calculadas
+        console.log(`Canvas: ${anchoCalculado}x${altoCalculado}px`);
+        console.log(`Contenedor: ${contenedor.offsetWidth}x${contenedor.offsetHeight}px`);
+        console.log(`Snapshots: ${this.snapshots.length}, Memoria: ${this.obtenerTamanoMemoria()}KB`);
     }
 
     obtenerTamanoMemoria() {
