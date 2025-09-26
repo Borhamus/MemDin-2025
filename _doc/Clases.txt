@@ -1,92 +1,227 @@
 classDiagram
     %% =========================
-    %% CLASES PRINCIPALES
+    %% CLASES PRINCIPALES - ACTUALIZADAS
     %% =========================
 
     class Configuracion {
+      +int tamanoMemoria
+      +string estrategia
       +int tiempoSeleccion
       +int tiempoCarga
       +int tiempoLiberacion
-      +int tamanioMemoria
-      +string estrategia
-      +cargarDesdeJSON(file)
+      +Array tanda
+      +setTamanoMemoria(tamano)
+      +setEstrategia(estrategia)
+      +setTiempos(sel, carga, lib)
+      +setTanda(tanda)
+      +getTamanoMemoria()
+      +getEstrategia()
+      +getTiempoSeleccion()
+      +getTiempoCarga()
+      +getTiempoLiberacion()
+      +getTanda()
     }
 
     class Estrategias {
-      +asignarProceso(proceso, memoria) bool
-      -firstFit()
-      -bestFit()
-      -worstFit()
-      -nextFit()
+      <<static>>
+      +firstFit(memoria, tamanoRequerido) BloqueMemoria
+      +bestFit(memoria, tamanoRequerido) BloqueMemoria
+      +worstFit(memoria, tamanoRequerido) BloqueMemoria
+      +nextFit(memoria, tamanoRequerido) BloqueMemoria
     }
 
     class Memoria {
-      +int tamanioTotal
+      +int tamanoTotal
       +List~BloqueMemoria~ bloques
-      +bool asignar(proceso, estrategia)
-      +liberar(proceso)
-      +coalescer()
+      +int ultimoIndiceAsignado
+      +asignarMemoria(proceso, estrategia) BloqueMemoria
+      +liberarMemoria(proceso)
+      +unificarBloques()
+      +firstFit(tamanoRequerido) BloqueMemoria
+      +bestFit(tamanoRequerido) BloqueMemoria
+      +worstFit(tamanoRequerido) BloqueMemoria
+      +nextFit(tamanoRequerido) BloqueMemoria
+      +getEstado() Array
     }
 
     class BloqueMemoria {
       +int inicio
-      +int tamanio
+      +int tamano
       +bool libre
-      +Proceso* proceso
+      +Proceso proceso
+      +puedeUnir(otroBloque) bool
+      +unir(otroBloque) bool
+      +dividir(tamanoOcupado) BloqueMemoria
     }
 
     class ListaDeProcesos {
       +List~Proceso~ procesos
-      +cargarDesdeJSON(file)
-      +getPendientes()
-      +getEnEspera(tiempoGlobal)
+      +cargarProcesos(datos)
+      +ordenarPorLlegada()
+      +obtenerSiguienteProceso(tiempoGlobal) Proceso
+      +obtenerProcesosEnEspera(tiempoGlobal) Array
+      +obtenerProcesosPorEstado(estado) Array
+      +hayProcesosEnEstado(estado) bool
+      +hayProcesosEnEspera(tiempoGlobal) bool
+      +hayProcesosActivos() bool
+      +getTodos() Array
     }
 
     class Proceso {
-      +string nombre
-      +int arribo
+      +string id
+      +int arrivaltime
+      +int duracionOriginal
       +int duracion
-      +int memoriaRequerida
+      +int memReq
       +string estado
-      +int timer
+      +int tiempoSeleccionRestante
+      +int tiempoCargaRestante
+      +int tiempoLiberacionRestante
       +int tiempoInicio
+      +int tiempoFinMemoria
       +int tiempoFin
-      +avanzarTiempo()
+      +BloqueMemoria bloqueAsignado
+      +iniciarSeleccion(tiempo, tiempoActual) bool
+      +iniciarCarga(tiempo, tiempoActual) bool
+      +iniciarMemoria(tiempoActual) bool
+      +iniciarLiberacion(tiempo, tiempoActual) bool
+      +finalizar(tiempoActual)
+      +decrementarTiempo() bool
     }
 
-    class Simulacion {
-      +int tiempoGlobal
-      +Configuracion config
-      +ListaDeProcesos lista
+    class Simulador {
+      <<Singleton>>
+      +Configuracion configuracion
       +Memoria memoria
-      +Reporte reporte
-      +iniciar()
-      +ciclo()
-      +finalizar()
+      +ListaDeProcesos listaProcesos
+      +Registros registros
+      +int tiempoGlobal
+      +bool estaEjecutando
+      +Array snapshots
+      +int maxTiempoGlobal
+      +int tiempoDeRetornoDeLaTanda
+      +int espacioLibreXtiempo
+      +inicializar(configuracion)
+      +ejecutar()
+      +paso()
+      +debeCalcularEspacioLibre() bool
+      +calcularEspacioLibre()
+      +procesarLiberacion()
+      +procesarMemoria()
+      +procesarCarga()
+      +procesarSeleccion()
+      +asignarNuevosProcesos()
+      +hayProcesosActivos() bool
+      +tomarSnapshot()
+      +getSnapshots() Array
+      +getEstadoActual() Object
+      +reiniciar()
+      +getRegistros() Registros
+      +getListaProcesos() ListaDeProcesos
+      +getMemoria() Memoria
+      +getTiempoDeRetornoDeLaTanda() int
+      +getEspacioLibreXtiempo() int
+    }
+
+    class Evento {
+      +int tiempo
+      +string tipo
+      +Object detalles
+    }
+
+    class Registros {
+      +List~Evento~ eventos
+      +registrarEvento(tiempo, tipo, detalles)
+      +getEventos() Array
+      +getEventosEnRango(inicio, fin) Array
+      +limpiar()
     }
 
     class Reporte {
-      +List~Evento~ eventos
-      +generarGantt()
-      +generarArchivoSalida()
-      +calcularMetricas()
+      +Registros registros
+      +ListaDeProcesos listaProcesos
+      +Memoria memoria
+      +Simulador simulador
+      +generarReporte() string
+      +getIndicadores() Object
     }
 
-    class Grafica {
-      +dibujarGantt(datos)
-      +mostrarMetricas(metricas)
+    class VisualizadorMemoria {
+      +string contenedorId
+      +Canvas canvas
+      +Context2D ctx
+      +Simulador simulador
+      +Array snapshots
+      +Object config
+      +inicializar(simulador) bool
+      +crearCanvas()
+      +obtenerTamanoMemoria() int
+      +crearPatron(tipo, color) CanvasPattern
+      +dibujar()
+      +dibujarEjes()
+      +dibujarBloques()
+      +dibujarLeyenda()
+      +onMouseMove(event)
+      +onClick(event)
+      +obtenerInfoEnPosicion(x, y) string
+      +mostrarError(mensaje)
+      +destruir()
+    }
+
+    class MainController {
+      <<UI Controller>>
+      +HTMLElement archivoTandaSelect
+      +HTMLElement tamMemoriaInput
+      +HTMLElement estrategiaSelect
+      +HTMLElement botones...
+      +Simulador simulador
+      +VisualizadorMemoria visualizadorMemoria
+      +int snapshotActual
+      +Array tandasDisponibles
+      +cargarTandas()
+      +cargarTanda(archivo) Promise
+      +ejecutarSimulacion() Promise
+      +mostrarIndicadores()
+      +mostrarSnapshot(indice)
+      +actualizarNavegacion()
+      +generarVisualizacionMemoria()
+      +descargarReporte() Promise
+      +obtenerSiguienteNumeroSimulacion() Promise
     }
 
     %% =========================
-    %% RELACIONES
+    %% RELACIONES ACTUALIZADAS
     %% =========================
 
-    Configuracion --> Simulacion : se usa en
-    Estrategias --> Memoria : define asignación
-    Memoria "1" *-- "many" BloqueMemoria
-    Memoria --> Proceso : aloja
-    ListaDeProcesos "1" *-- "many" Proceso
-    Simulacion --> ListaDeProcesos
-    Simulacion --> Memoria
-    Simulacion --> Reporte
-    Reporte --> Grafica
+    Simulador --> Configuracion : usa
+    Simulador --> Memoria : administra
+    Simulador --> ListaDeProcesos : administra
+    Simulador --> Registros : usa
+    
+    Estrategias ..> Memoria : consulta
+    Memoria "1" *-- "many" BloqueMemoria : contiene
+    BloqueMemoria --> Proceso : referencia
+    ListaDeProcesos "1" *-- "many" Proceso : contiene
+    
+    Registros "1" *-- "many" Evento : contiene
+    
+    Reporte --> Simulador : analiza
+    Reporte --> Registros : usa
+    Reporte --> ListaDeProcesos : usa
+    Reporte --> Memoria : usa
+    
+    VisualizadorMemoria --> Simulador : visualiza
+    
+    MainController --> Simulador : controla
+    MainController --> VisualizadorMemoria : crea
+    MainController --> Configuracion : crea
+    MainController --> Reporte : usa
+    
+    %% =========================
+    %% NOTAS SOBRE CAMBIOS
+    %% =========================
+    
+    note for Simulador "Patrón Singleton implementado\nManeja variables globales para métricas\nProcesa estados en orden específico"
+    note for Proceso "Estados: EnEspera, EnSeleccion, EnCarga, EnMemoria, EnLiberacion, Finalizado\nTimers individuales para cada transición"
+    note for VisualizadorMemoria "Genera canvas con gráfico Gantt de memoria\nPatrones visuales para diferentes estados\nInteractividad con mouse"
+    note for MainController "Archivo main.js\nControla toda la interfaz HTML\nManeja navegación temporal por snapshots"

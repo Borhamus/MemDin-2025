@@ -1,34 +1,82 @@
 flowchart TD
-    %% Dirección top-down
-    A(["Inicio"]) --> B["Inicializar: tiempoGlobal = 0, todos los procesos en estado Pendiente, memoria = partición libre total"]
+    %% Dirección top-down - FLUJO ACTUALIZADO DEL SIMULADOR
+    A(["Inicio"]) --> B["Inicializar: tiempoGlobal = -1, configuración, memoria, lista de procesos, registros"]
 
-    B --> C{"¿Existen procesos con estado ≠ Finalizado?"}
-    C -- No --> M["Calcular métricas finales: tiempos de retorno medios, fragmentación externa"]
-    M --> N["Generar gráfico Gantt y archivo de eventos"]
+    B --> B1["Intentar asignar procesos en tiempo 0 si llegaron"]
+    B1 --> B2["Calcular espacio libre inicial si hay procesos pendientes"]
+    B2 --> B3["Tomar snapshot inicial"]
+    
+    B3 --> C{"¿Hay procesos activos en el sistema?"}
+    C -- No --> M["Calcular métricas finales: tiempo de retorno de tanda, fragmentación externa"]
+    M --> N["Registrar fin de simulación"]
     N --> Z(["Fin Simulación"])
 
-    C -- Sí --> D["Registrar arribos: mover a Espera los procesos con arribo == tiempoGlobal"]
+    C -- Sí --> D["Avanzar tiempoGlobal = tiempoGlobal + 1"]
 
-    D --> E["Decrementar timers de procesos en EnSeleccion, EnCarga, EnMemoria, EnLiberacion"]
+    D --> E["PROCESAR LIBERACIÓN: Decrementar timer de procesos en EnLiberacion"]
+    E --> E1{"¿Timer liberación = 0?"}
+    E1 -- Sí --> E2["Liberar memoria del proceso → Finalizado"]
+    E1 -- No --> F
+    E2 --> F
 
-    E --> F["Procesos cuya timer de Selección = 0 → pasar a EnCarga; setear timerCarga"]
-    F --> G["Procesos cuya timer de Carga = 0 → pasar a EnMemoria; setear timerDuración"]
+    F --> F1["PROCESAR MEMORIA: Decrementar timer de procesos en EnMemoria"]
+    F1 --> F2{"¿Timer duración = 0?"}
+    F2 -- Sí --> F3["Actualizar tiempo retorno tanda → EnLiberacion"]
+    F2 -- No --> G
+    F3 --> G1{"¿Timer liberación = 0?"}
+    G1 -- Sí --> G2["Liberar inmediatamente → Finalizado"]
+    G1 -- No --> G
+    G2 --> G
 
-    G --> H{"¿Algún proceso en EnMemoria con duracion (ejecución) = 0?"}
-    H -- Sí --> I["Registrar tiempo de finalización del proceso; pasar a EnLiberacion; setear timerLiberacion"]
-    H -- No --> J["Seguir en EnMemoria"]
+    G --> G3["PROCESAR CARGA: Decrementar timer de procesos en EnCarga"]
+    G3 --> G4{"¿Timer carga = 0?"}
+    G4 -- Sí --> G5["Pasar a EnMemoria"]
+    G4 -- No --> H
+    G5 --> H
 
-    I --> K["Liberación: procesos cuya timerLiberacion = 0 → liberar partición correspondiente"]
-    K --> L["Coalescer huecos libres adyacentes (unir bloques)"]
+    H --> H1["PROCESAR SELECCIÓN: Decrementar timer de procesos en EnSeleccion"]
+    H1 --> H2{"¿Timer selección = 0?"}
+    H2 -- Sí --> H3["Pasar a EnCarga"]
+    H2 -- No --> I
+    H3 --> H4{"¿Timer carga = 0?"}
+    H4 -- Sí --> H5["Pasar directamente a EnMemoria"]
+    H4 -- No --> I
+    H5 --> I
 
-    J --> L
+    I --> I1{"¿Hay procesos en EnSeleccion o EnCarga?"}
+    I1 -- Sí --> J1["NO asignar nuevos procesos"]
+    I1 -- No --> I2["ASIGNAR NUEVOS PROCESOS: Obtener procesos en espera con arribo <= tiempoGlobal"]
+    
+    I2 --> I3{"¿Hay procesos en espera disponibles?"}
+    I3 -- No --> J1
+    I3 -- Sí --> I4["Tomar PRIMER proceso (FCFS)"]
+    
+    I4 --> I5["Aplicar estrategia de asignación (FirstFit/BestFit/WorstFit/NextFit)"]
+    I5 --> I6{"¿Se encontró bloque adecuado?"}
+    I6 -- No --> J1
+    I6 -- Sí --> I7["Dividir bloque si es necesario"]
+    I7 --> I8["Asignar bloque al proceso → EnSeleccion"]
+    I8 --> I9{"¿Timer selección = 0?"}
+    I9 -- Sí --> I10["Pasar inmediatamente a EnCarga"]
+    I9 -- No --> J1
+    I10 --> I11{"¿Timer carga = 0?"}
+    I11 -- Sí --> I12["Pasar inmediatamente a EnMemoria"]
+    I11 -- No --> J1
+    I12 --> J1
 
-    L --> O["Intentar asignar procesos en Espera con arribo <= tiempoGlobal"]
-    O -- Partición disponible --> P["Reservar partición; pasar a EnSeleccion con timerSeleccion; registrar evento de asignación"]
-    O -- No disponible --> Q["Procesos permanecen en Espera"]
+    J1 --> J2["Unificar bloques libres adyacentes"]
+    J2 --> K{"¿Debe calcular espacio libre para métricas?"}
+    K -- Sí --> K1["Calcular y acumular espacio libre actual"]
+    K -- No --> L
+    K1 --> L
+    
+    L --> L1["Tomar snapshot del estado actual"]
+    L1 --> L2["Registrar eventos ocurridos en este paso"]
+    L2 --> C
 
-    P --> R["(Opcional) registro de evento de asignación en log"]
-    Q --> R
-
-    R --> S["Avanzar tiempoGlobal = tiempoGlobal + 1"]
-    S --> C
+    %% Notas sobre cambios principales:
+    %% 1. Orden de procesamiento: Liberación → Memoria → Carga → Selección
+    %% 2. Política FCFS: Un solo proceso por vez
+    %% 3. Transiciones instantáneas si timers = 0
+    %% 4. Cálculo de métricas solo mientras hay procesos pendientes
+    %% 5. Sistema de snapshots para visualización
