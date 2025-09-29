@@ -1,82 +1,98 @@
 flowchart TD
-    %% Dirección top-down - FLUJO ACTUALIZADO DEL SIMULADOR
-    A(["Inicio"]) --> B["Inicializar: tiempoGlobal = -1, configuración, memoria, lista de procesos, registros"]
-
-    B --> B1["Intentar asignar procesos en tiempo 0 si llegaron"]
-    B1 --> B2["Calcular espacio libre inicial si hay procesos pendientes"]
-    B2 --> B3["Tomar snapshot inicial"]
+    %% ============================================
+    %% FLUJO SIMPLIFICADO Y LEGIBLE DEL SIMULADOR
+    %% ============================================
     
-    B3 --> C{"¿Hay procesos activos en el sistema?"}
-    C -- No --> M["Calcular métricas finales: tiempo de retorno de tanda, fragmentación externa"]
-    M --> N["Registrar fin de simulación"]
-    N --> Z(["Fin Simulación"])
-
-    C -- Sí --> D["Avanzar tiempoGlobal = tiempoGlobal + 1"]
-
-    D --> E["PROCESAR LIBERACIÓN: Decrementar timer de procesos en EnLiberacion"]
-    E --> E1{"¿Timer liberación = 0?"}
-    E1 -- Sí --> E2["Liberar memoria del proceso → Finalizado"]
-    E1 -- No --> F
-    E2 --> F
-
-    F --> F1["PROCESAR MEMORIA: Decrementar timer de procesos en EnMemoria"]
-    F1 --> F2{"¿Timer duración = 0?"}
-    F2 -- Sí --> F3["Actualizar tiempo retorno tanda → EnLiberacion"]
-    F2 -- No --> G
-    F3 --> G1{"¿Timer liberación = 0?"}
-    G1 -- Sí --> G2["Liberar inmediatamente → Finalizado"]
-    G1 -- No --> G
-    G2 --> G
-
-    G --> G3["PROCESAR CARGA: Decrementar timer de procesos en EnCarga"]
-    G3 --> G4{"¿Timer carga = 0?"}
-    G4 -- Sí --> G5["Pasar a EnMemoria"]
-    G4 -- No --> H
-    G5 --> H
-
-    H --> H1["PROCESAR SELECCIÓN: Decrementar timer de procesos en EnSeleccion"]
-    H1 --> H2{"¿Timer selección = 0?"}
-    H2 -- Sí --> H3["Pasar a EnCarga"]
-    H2 -- No --> I
-    H3 --> H4{"¿Timer carga = 0?"}
-    H4 -- Sí --> H5["Pasar directamente a EnMemoria"]
-    H4 -- No --> I
-    H5 --> I
-
-    I --> I1{"¿Hay procesos en EnSeleccion o EnCarga?"}
-    I1 -- Sí --> J1["NO asignar nuevos procesos"]
-    I1 -- No --> I2["ASIGNAR NUEVOS PROCESOS: Obtener procesos en espera con arribo <= tiempoGlobal"]
+    START([INICIO]) --> INIT[Inicializar Sistema<br/>tiempo = -1<br/>memoria = 1 bloque libre<br/>cargar procesos]
     
-    I2 --> I3{"¿Hay procesos en espera disponibles?"}
-    I3 -- No --> J1
-    I3 -- Sí --> I4["Tomar PRIMER proceso (FCFS)"]
+    INIT --> TRY_ASSIGN[Intentar asignar<br/>procesos en T=0]
+    TRY_ASSIGN --> SNAP0[Tomar snapshot inicial]
     
-    I4 --> I5["Aplicar estrategia de asignación (FirstFit/BestFit/WorstFit/NextFit)"]
-    I5 --> I6{"¿Se encontró bloque adecuado?"}
-    I6 -- No --> J1
-    I6 -- Sí --> I7["Dividir bloque si es necesario"]
-    I7 --> I8["Asignar bloque al proceso → EnSeleccion"]
-    I8 --> I9{"¿Timer selección = 0?"}
-    I9 -- Sí --> I10["Pasar inmediatamente a EnCarga"]
-    I9 -- No --> J1
-    I10 --> I11{"¿Timer carga = 0?"}
-    I11 -- Sí --> I12["Pasar inmediatamente a EnMemoria"]
-    I11 -- No --> J1
-    I12 --> J1
-
-    J1 --> J2["Unificar bloques libres adyacentes"]
-    J2 --> K{"¿Debe calcular espacio libre para métricas?"}
-    K -- Sí --> K1["Calcular y acumular espacio libre actual"]
-    K -- No --> L
-    K1 --> L
+    SNAP0 --> LOOP{¿Hay procesos<br/>activos?}
     
-    L --> L1["Tomar snapshot del estado actual"]
-    L1 --> L2["Registrar eventos ocurridos en este paso"]
-    L2 --> C
-
-    %% Notas sobre cambios principales:
-    %% 1. Orden de procesamiento: Liberación → Memoria → Carga → Selección
-    %% 2. Política FCFS: Un solo proceso por vez
-    %% 3. Transiciones instantáneas si timers = 0
-    %% 4. Cálculo de métricas solo mientras hay procesos pendientes
-    %% 5. Sistema de snapshots para visualización
+    LOOP -->|NO| CALC_FINAL[Calcular indicadores finales:<br/>- Tiempo de retorno tanda<br/>- Fragmentación externa]
+    CALC_FINAL --> END([FIN])
+    
+    LOOP -->|SÍ| TIME[tiempo++]
+    
+    %% ============================================
+    %% PROCESAMIENTO DE ESTADOS (orden crítico)
+    %% ============================================
+    
+    TIME --> PROC_LIB[PROCESAR LIBERACIÓN<br/>Decrementar timer]
+    PROC_LIB --> LIB_CHECK{¿Timer = 0?}
+    LIB_CHECK -->|SÍ| LIB_DO[Liberar memoria<br/>→ Finalizado]
+    LIB_CHECK -->|NO| PROC_MEM
+    LIB_DO --> PROC_MEM
+    
+    PROC_MEM[PROCESAR MEMORIA<br/>Decrementar duración]
+    PROC_MEM --> MEM_CHECK{¿Duración = 0?}
+    MEM_CHECK -->|SÍ| MEM_DO[Actualizar métrica<br/>→ EnLiberación]
+    MEM_CHECK -->|NO| PROC_CARGA
+    MEM_DO --> PROC_CARGA
+    
+    PROC_CARGA[PROCESAR CARGA<br/>Decrementar timer]
+    PROC_CARGA --> CARGA_CHECK{¿Timer = 0?}
+    CARGA_CHECK -->|SÍ| CARGA_DO[→ EnMemoria]
+    CARGA_CHECK -->|NO| PROC_SEL
+    CARGA_DO --> PROC_SEL
+    
+    PROC_SEL[PROCESAR SELECCIÓN<br/>Decrementar timer]
+    PROC_SEL --> SEL_CHECK{¿Timer = 0?}
+    SEL_CHECK -->|SÍ| SEL_DO[→ EnCarga]
+    SEL_CHECK -->|NO| ASSIGN_CHECK
+    SEL_DO --> ASSIGN_CHECK
+    
+    %% ============================================
+    %% ASIGNACIÓN DE NUEVOS PROCESOS
+    %% ============================================
+    
+    ASSIGN_CHECK{¿Hay procesos<br/>en transición?}
+    ASSIGN_CHECK -->|SÍ| UNIFY
+    ASSIGN_CHECK -->|NO| GET_WAITING[Obtener procesos<br/>en espera que<br/>ya llegaron]
+    
+    GET_WAITING --> WAITING_CHECK{¿Hay procesos<br/>disponibles?}
+    WAITING_CHECK -->|NO| UNIFY
+    WAITING_CHECK -->|SÍ| TAKE_FIRST[Tomar PRIMER proceso<br/>por orden de llegada]
+    
+    TAKE_FIRST --> APPLY_STRAT[Aplicar estrategia:<br/>FirstFit / BestFit /<br/>WorstFit / NextFit]
+    
+    APPLY_STRAT --> BLOCK_FOUND{¿Bloque<br/>encontrado?}
+    BLOCK_FOUND -->|NO| UNIFY
+    BLOCK_FOUND -->|SÍ| SPLIT_BLOCK[Dividir bloque<br/>si es necesario]
+    
+    SPLIT_BLOCK --> ASSIGN_BLOCK[Asignar bloque<br/>→ EnSelección]
+    ASSIGN_BLOCK --> INSTANT_CHECK{¿Timers = 0?}
+    INSTANT_CHECK -->|SÍ| INSTANT_TRANS[Transiciones<br/>instantáneas]
+    INSTANT_CHECK -->|NO| UNIFY
+    INSTANT_TRANS --> UNIFY
+    
+    %% ============================================
+    %% UNIFICACIÓN Y MÉTRICAS
+    %% ============================================
+    
+    UNIFY[Unificar bloques<br/>libres adyacentes]
+    UNIFY --> METRIC_CHECK{¿Calcular<br/>fragmentación?}
+    
+    METRIC_CHECK -->|SÍ| CALC_METRIC[Acumular<br/>espacio libre actual]
+    METRIC_CHECK -->|NO| SNAPSHOT
+    CALC_METRIC --> SNAPSHOT
+    
+    SNAPSHOT[Tomar snapshot<br/>del estado actual]
+    SNAPSHOT --> LOOP
+    
+    %% ============================================
+    %% ESTILOS PARA MEJOR LEGIBILIDAD
+    %% ============================================
+    
+    classDef initStyle fill:#e1f5e1,stroke:#4caf50,stroke-width:2px
+    classDef processStyle fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    classDef decisionStyle fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    classDef actionStyle fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    classDef endStyle fill:#ffebee,stroke:#f44336,stroke-width:2px
+    
+    class START,INIT,END initStyle
+    class TIME,PROC_LIB,PROC_MEM,PROC_CARGA,PROC_SEL processStyle
+    class LOOP,LIB_CHECK,MEM_CHECK,CARGA_CHECK,SEL_CHECK,ASSIGN_CHECK,WAITING_CHECK,BLOCK_FOUND,INSTANT_CHECK,METRIC_CHECK decisionStyle
+    class LIB_DO,MEM_DO,CARGA_DO,SEL_DO,TAKE_FIRST,APPLY_STRAT,SPLIT_BLOCK,ASSIGN_BLOCK,INSTANT_TRANS,UNIFY,CALC_METRIC,SNAPSHOT actionStyle
+    class CALC_FINAL endStyle
