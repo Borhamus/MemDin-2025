@@ -11,12 +11,14 @@ MemDin-2025/
  │   ├── Memoria.js
  │   ├── Proceso.js
  │   ├── Registros.js
+ │   ├── Reporte.js
  │   ├── Simulador.js
  │   └── VisualizadorMemoria.js
  │
  ├── sim/                   <- Aqui van las simulacciones finalizadas.
  │   ├── Simulacion_1.txt
  │   └── Simulacion_2.txt
+ │
  ├── css/
  │   └── style.css
  │
